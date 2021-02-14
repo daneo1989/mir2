@@ -78,7 +78,7 @@ namespace LibraryEditor
                 _fStream.Seek(0, SeekOrigin.Begin);
                 buffer = _bReader.ReadBytes(48);
                 //var desc = Encoding.UTF8.GetString(buffer, 1, 20);
-                _nType = (byte)(buffer[40] == 1 ? 2 : buffer[2] == 73 ? 3 : _nType);
+                _nType = (byte)((buffer[40] == 1 || buffer[40] == 6) ? 2 : buffer[2] == 73 ? 3 : _nType);
 
                 if (_nType == 0)
                 {
@@ -222,6 +222,8 @@ namespace LibraryEditor
                 byte[][] Pixels = new byte[2][];
                 Pixels[0] = new byte[OutputWidth * OutputHeight * 2];
                 Pixels[1] = new byte[OutputWidth * OutputHeight * 2];
+                int n = BReader.ReadInt32();
+                if (n != 0) BReader.BaseStream.Seek(-4, SeekOrigin.Current);
                 byte[] FileBytes = BReader.ReadBytes(InputLength * 2);
 
                 int End = 0, OffSet = 0, Start = 0, Count;
@@ -231,14 +233,18 @@ namespace LibraryEditor
                 for (int Y = OutputHeight - 1; Y >= 0; Y--)
                 {
                     OffSet = Start * 2;
-                    End += FileBytes[OffSet];
+                    End += FileBytes[OffSet+1] << 8 | FileBytes[OffSet];
                     Start++;
                     nX = Start;
                     OffSet += 2;
-                    while (nX < End)
+
+                    while (nX < End && End > 0)
                     {
                         switch (FileBytes[OffSet])
                         {
+                            default: //Unknown
+                                OffSet += 1;
+                                break;
                             case 192: //No Colour
                                 nX += 2;
                                 x += FileBytes[OffSet + 3] << 8 | FileBytes[OffSet + 2];
@@ -246,7 +252,6 @@ namespace LibraryEditor
                                 break;
 
                             case 193:  //Solid Colour
-                            case 195:
                                 nX += 2;
                                 Count = FileBytes[OffSet + 3] << 8 | FileBytes[OffSet + 2];
                                 OffSet += 4;
@@ -262,6 +267,7 @@ namespace LibraryEditor
                                 break;
 
                             case 194:  //Overlay Colour
+                            case 195:
                                 HasMask = true;
                                 nX += 2;
                                 Count = FileBytes[OffSet + 3] << 8 | FileBytes[OffSet + 2];
