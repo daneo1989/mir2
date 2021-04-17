@@ -214,8 +214,75 @@ namespace Server.MirObjects
                     return new HellBomb(info);
                 case 100:
                     return new VenomSpider(info);
+                case 101:
+                    return new AncientBringer(info);
+                case 102:
+                    return new IceGuard(info);
+                case 103:
+                    return new ElementGuard(info);
+                case 104:
+                    return new DemonGuard(info);
+                case 105:
+                    return new KingGuard(info);
+                case 106:
+                    return new DeathCrawler(info);
+                case 107:
+                    return new BurningZombie(info);
+                case 108:
+                    return new MudZombie(info);
+                case 109:
+                    return new FrozenZombie(info);
+                case 110:
+                    return new DemonWolf(info);
+                case 111:
+                    return new WhiteMammoth(info);
+                case 112:
+                    return new DarkBeast(info); // USE THIS AI FOR LIGHTBEAST
+                case 113:
+                    return new BloodBaboon(info);
+                case 114:
+                    return new CatWidow(info);
+                case 115:
+                    return new SandSnail(info);
+                case 116:
+                    return new BlackHammerCat(info);
+                case 117:
+                    return new StrayCat(info);
+                case 118:
+                    return new CatShaman(info);
+                case 119:
+                    return new SeedingsGeneral(info);
+
+                //Case 120 - GeneralJimnYo Unfinished
+                
+                case 121:
+                    return new Armadillo(info);
+                case 122:
+                    return new ArmadilloElder(info);
+                case 123:
+                    return new TucsonMage(info);
+                case 124:
+                    return new TucsonWarrior(info);
+                case 125:
+                    return new TucsonEgg(info);
+                case 126:
+                    return new TucsonEgg1(info); //AI which will spawn TucsonGeneral upon killing the egg.
+                case 127:
+                    return new CannibalTentacles(info);
+                case 128:
+                    return new GasToad(info);
+                case 129:
+                    return new Mantis(info);
+                case 130:
+                    return new AssassinBird(info);
+                case 131:
+                    return new RhinoWarrior(info);
+                case 132:
+                    return new RhinoPriest(info);
 
                 //unfinished
+                case 120:
+                    return new GeneralJinmYo(info); // AI Incomplete - See notes in AI file.
                 case 253:
                     return new FlamingMutant(info);
                 case 254:

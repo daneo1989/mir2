@@ -450,10 +450,10 @@ public enum Monster : ushort
     HellKnight4 = 246,//done
     HellLord = 247,//done BOSS
     WaterGuard = 248,//done
-    IceGuard = 249,
-    ElementGuard = 250,
-    DemonGuard = 251,
-    KingGuard = 252,
+    IceGuard = 249, // Done (DG)
+    ElementGuard = 250, // Done (DG)
+    DemonGuard = 251, // Done (DG)
+    KingGuard = 252, //TODO: AI Incomplete - Needs revisiting
     Snake10 = 253,//done
     Snake11 = 254,//done
     Snake12 = 255,//done
@@ -463,48 +463,48 @@ public enum Monster : ushort
     Snake16 = 259,//done
     Snake17 = 260,//done
 
-    DeathCrawler = 261,
-    BurningZombie = 262,
-    MudZombie = 263,
-    FrozenZombie = 264,
-    UndeadWolf = 265,
-    Demonwolf = 266,
-    WhiteMammoth = 267,
-    DarkBeast = 268,
-    LightBeast = 269,
-    BloodBaboon = 270,
-    HardenRhino = 271,
-    AncientBringer = 272,
-    FightingCat = 273,
-    FireCat = 274,
-    CatWidow = 275,
-    StainHammerCat = 276,
-    BlackHammerCat = 277,
-    StrayCat = 278,
-    CatShaman = 279,
+    DeathCrawler = 261, // Done (DG)
+    BurningZombie = 262, // Done (DG)
+    MudZombie = 263, // Done (DG)
+    FrozenZombie = 264, // Done (DG)
+    UndeadWolf = 265, // No AI, basic attack Mob (DG)
+    Demonwolf = 266, // Done (DG)
+    WhiteMammoth = 267, // Done (DG)
+    DarkBeast = 268, // Done (DG)
+    LightBeast = 269, // Done (DG) - USE DARKBEAST AI
+    BloodBaboon = 270, // Done (DG)
+    HardenRhino = 271, // TODO: AI (Shoulder Dash Attack)
+    AncientBringer = 272, // Done (DG)
+    FightingCat = 273, // No AI, basic attack Mob (DG)
+    FireCat = 274, // Done (DG) - Use BlackFoxMan AI (44)
+    CatWidow = 275, // Done (DG)
+    StainHammerCat = 276, // Done (DG)
+    BlackHammerCat = 277, // Done (DG)
+    StrayCat = 278, // Done (DG)
+    CatShaman = 279, // Done (DG)
     Jar1 = 280,
     Jar2 = 281,
-    SeedingsGeneral = 282,
+    SeedingsGeneral = 282, // Done (DG)
     RestlessJar = 283,
-    GeneralJinmYo = 284,
-    Bunny = 285,
-    Tucson = 286,
-    TucsonFighter = 287,
-    TucsonMage = 288,
-    TucsonWarrior = 289,
-    Armadillo = 290,
-    ArmadilloElder = 291,
-    TucsonEgg = 292,
-    PlaguedTucson = 293,
-    SandSnail = 294,
-    CannibalTentacles = 295,
+    GeneralJinmYo = 284, // TODO: AI Incomplete - Thunderbolt and orb at end of lib file, not sure what this does? See notes in AI file (DG).
+    Bunny = 285, 
+    Tucson = 286, //No AI or spell animations (DG)
+    TucsonFighter = 287, // Use AI 44 - No spell animation (DG)
+    TucsonMage = 288, // Done (DG)
+    TucsonWarrior = 289, // Done (DG)
+    Armadillo = 290, // Done (DG)
+    ArmadilloElder = 291, // Done (DG)
+    TucsonEgg = 292, // Done (DG) - 2 AIs added (TucsonEgg1 will spawn TucsonGeneral upon death).
+    PlaguedTucson = 293, //No AI - Basic Attack Mob (DG)
+    SandSnail = 294, // Done (DG)
+    CannibalTentacles = 295, // Done (DG)
     TucsonGeneral = 296,
-    GasToad = 297,
-    Mantis = 298,
-    SwampWarrior = 299,
+    GasToad = 297, // Done (DG)
+    Mantis = 298, // Done (DG)
+    SwampWarrior = 299, // Done (DG)
 
-    AssassinBird = 300,
-    RhinoWarrior = 301,
+    AssassinBird = 300, // Done (DG)
+    RhinoWarrior = 301, // AI Incomplete - Needs water and rock attacks coding (DG).
     RhinoPriest = 302,
     SwampSlime = 303,
     RockGuard = 304,
@@ -1251,7 +1251,8 @@ public enum SpellEffect : byte
     TurtleKing,
     Behemoth,
     Stunned,
-    IcePillar
+    IcePillar,
+    KingGuard,
 }
 
 

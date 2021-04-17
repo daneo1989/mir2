@@ -151,7 +151,9 @@ namespace Server
                              VampireName = "VampireSpider",
                              ToadName = "SpittingToad",
                              SnakeTotemName = "SnakeTotem",
-                             SnakesName = "CharmedSnake";
+                             SnakesName = "CharmedSnake",
+                             AncientBatName = "AncientBat",
+                             TucsonGeneralEgg = "GeneralTucson";
 
         public static string HealRing = "Healing",
                              FireRing = "FireBall",
@@ -386,6 +388,8 @@ namespace Server
             ToadName = Reader.ReadString("Game", "ToadName", ToadName);
             SnakeTotemName = Reader.ReadString("Game", "SnakeTotemName", SnakeTotemName);
             SnakesName = Reader.ReadString("Game", "SnakesName", SnakesName);
+            AncientBatName = Reader.ReadString("Game", "AncientBatName", AncientBatName);
+            TucsonGeneralEgg = Reader.ReadString("Game", "TucsonGeneralEgg", TucsonGeneralEgg);
             GroupInviteDelay = Reader.ReadInt64("Game", "GroupInviteDelay", GroupInviteDelay);
             TradeDelay = Reader.ReadInt64("Game", "TradeDelay", TradeDelay);
 
@@ -639,6 +643,8 @@ namespace Server
             Reader.Write("Game", "ToadName", ToadName);
             Reader.Write("Game", "SnakeTotemName", SnakeTotemName);
             Reader.Write("Game", "SnakesName", SnakesName);
+            Reader.Write("Game", "AncientBatName", AncientBatName);
+            Reader.Write("Game", "TucsonGeneralEgg", TucsonGeneralEgg);
             Reader.Write("Game", "GroupInviteDelay", GroupInviteDelay);
             Reader.Write("Game", "TradeDelay", TradeDelay);
 

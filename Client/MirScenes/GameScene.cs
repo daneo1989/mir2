@@ -3890,6 +3890,9 @@ namespace Client.MirScenes
                     case SpellEffect.IcePillar:
                         ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.IcePillar], 18, 8, 800, ob));
                         break;
+                    case SpellEffect.KingGuard:
+                        ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.KingGuard], 753, 10, 1000, ob) { Blend = false });
+                        break;
                 }
                 return;
             }
@@ -9387,7 +9390,7 @@ namespace Client.MirScenes
                     if (DXManager.Lights[light] != null && !DXManager.Lights[light].Disposed)
                     {
                         p.Offset(-(DXManager.LightSizes[light].X / 2) - (CellWidth / 2), -(DXManager.LightSizes[light].Y / 2) - (CellHeight / 2) - 5);
-                        DXManager.Sprite.Draw(DXManager.Lights[light], new Rectangle(0, 0, DXManager.LightSizes[light].X, DXManager.LightSizes[light].Y), Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), Color.White);
+                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), Color.White);
                     }
                 }
             }
