@@ -99,33 +99,8 @@ public enum ItemGrade : byte
     Mythical = 4,
 }
 
-public enum StatType : byte
-{
-    AC = 0,
-    MAC = 1,
-    DC = 2,
-    MC = 3,
-    SC = 4,
-    HP = 5,
-    MP = 6,
-    HP_Percent = 7,
-    MP_Percent = 8,
-    HP_Regen = 9,
-    MP_Regen = 10,
-    ASpeed = 11,
-    Luck = 12,
-    Strong = 13,
-    Accuracy = 14,
-    Agility = 15,
-    MagicResist = 16,
-    PoisonResist = 17,
-    PoisonAttack = 18,
-    PoisonRegen = 19,
-    Freezing = 20,
-    Holy = 21,
-    Durability = 22,
-    Unknown = 23
-}
+
+
 public enum RefinedValue : byte
 {
     None = 0,
@@ -471,7 +446,7 @@ public enum Monster : ushort
     Demonwolf = 266, // Done (DG)
     WhiteMammoth = 267, // Done (DG)
     DarkBeast = 268, // Done (DG)
-    LightBeast = 269, // Done (DG) - USE DARKBEAST AI
+    LightBeast = 269, // Done (DG) - USE AI 112 (DARKBEAST)
     BloodBaboon = 270, // Done (DG)
     HardenRhino = 271, // TODO: AI (Shoulder Dash Attack)
     AncientBringer = 272, // Done (DG)
@@ -505,20 +480,20 @@ public enum Monster : ushort
 
     AssassinBird = 300, // Done (DG)
     RhinoWarrior = 301, // AI Incomplete - Needs water and rock attacks coding (DG).
-    RhinoPriest = 302,
-    SwampSlime = 303,
-    RockGuard = 304,
-    MudWarrior = 305,
+    RhinoPriest = 302, // Done (DG)
+    SwampSlime = 303, // Done (DG) - USE AI 113 (BloodBaboon) for Attack2. 
+    RockGuard = 304,  // No spell animations (DG) - USE AI 113 (BloodBaboon) for Attack2.
+    MudWarrior = 305, // Done (DG) - Frames amended (Attack2 changed to AttackRange1)
     SmallPot = 306,
     TreeQueen = 307,
     ShellFighter = 308,
-    DarkBaboon = 309,
-    TwinHeadBeast = 310,
-    OmaCannibal = 311,
-    OmaBlest = 312,
-    OmaSlasher = 313,
-    OmaAssassin = 314,
-    OmaMage = 315,
+    DarkBaboon = 309, // Done (DG) - USE AI 113 (BloodBaboon) for Attack2. 
+    TwinHeadBeast = 310, // Done (DG) - USE AI 112 (DARKBEAST)
+    OmaCannibal = 311, // Done (DG)
+    OmaBlest = 312, // Done (DG)
+    OmaSlasher = 313, // Done (DG)
+    OmaAssassin = 314, // Done (DG)
+    OmaMage = 315, // Done (DG)
     OmaWitchDoctor = 316,
     LightningBead = 317,
     HealingBead = 318,
@@ -1004,7 +979,7 @@ public enum SpecialItemMode : short
     None = 0,
     Paralize = 0x0001,
     Teleport = 0x0002,
-    Clearring = 0x0004,
+    ClearRing = 0x0004,
     Protection = 0x0008,
     Revival = 0x0010,
     Muscle = 0x0020,
@@ -1212,6 +1187,8 @@ public enum Spell : byte
     Blink = 151,
     Portal = 152,
     BattleCry = 153,
+    FireBounce = 154,
+    MeteorShower = 155,
 
     //Map Events
     DigOutZombie = 200,
@@ -1285,6 +1262,7 @@ public enum BuffType : byte
     PetEnhancer,
     ImmortalSkin,
     MagicShield,
+    ElementalBarrier,
 
     //special
     GameMaster = 100,
@@ -1300,6 +1278,8 @@ public enum BuffType : byte
     Guild,
     Prison,
     Rested,
+    Skill,
+    ClearRing,
 
     //stats
     Impact = 200,
@@ -1312,6 +1292,13 @@ public enum BuffType : byte
     MagicDefence,
     WonderDrug,
     Knapsack
+}
+
+public enum BuffStackType : byte
+{
+    Reset,
+    Duration,
+    Stat
 }
 
 public enum DefenceType : byte
@@ -1436,6 +1423,7 @@ public enum ServerPacketIds : short
     MagicCast,
     ObjectMagic,
     ObjectEffect,
+    ObjectProjectile,
     RangeAttack,
     Pushed,
     ObjectPushed,
@@ -1513,9 +1501,7 @@ public enum ServerPacketIds : short
     CombineItem,
     ItemUpgraded,
     SetConcentration,
-    SetObjectConcentration,
     SetElemental,
-    SetObjectElemental,
     RemoveDelayedExplosion,
     ObjectDeco,
     ObjectSneaking,
@@ -1672,7 +1658,6 @@ public enum ClientPacketIds : short
     CancelReincarnation,
     CombineItem,
 
-    SetConcentration,
     AwakeningNeedMaterials,
     AwakeningLockedItem,
     Awakening,
@@ -1690,6 +1675,7 @@ public enum ClientPacketIds : short
 
     UpdateIntelligentCreature,
     IntelligentCreaturePickup,
+    RequestIntelligentCreatureUpdates,
 
     AddFriend,
     RemoveFriend,
