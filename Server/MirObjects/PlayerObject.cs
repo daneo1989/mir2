@@ -12754,7 +12754,7 @@ namespace Server.MirObjects
         }
         public void GainItemMail(UserItem item, int reason)
         {
-            Envir.MailCharacter(Info, item, reason);
+            Envir.MailCharacter(Info, item: item, reason: reason);
         }
 
         private bool DropItem(UserItem item, int range = 1, bool DeathDrop = false)
@@ -14623,7 +14623,7 @@ namespace Server.MirObjects
         #endregion
 
         #region Consignment
-        public void ConsignItem(ulong uniqueID, uint price)
+        public void ConsignItem(ulong uniqueID, uint price, MarketPanelType panelType)
         {
             S.ConsignItem p = new S.ConsignItem { UniqueID = uniqueID };
 
@@ -14633,7 +14633,7 @@ namespace Server.MirObjects
                 return;
             }
 
-            switch (MarketPanelType)
+            switch (panelType)
             {
                 case MarketPanelType.Consign:
                     {
@@ -14924,6 +14924,12 @@ namespace Server.MirObjects
                             return;
                         }
 
+                        if (!Envir.Auctions.Contains(auction))
+                        {
+                            Enqueue(new S.MarketFail { Reason = 3 });
+                            return;
+                        }
+
                         if (!CanGainItem(auction.Item))
                         {
                             Enqueue(new S.MarketFail { Reason = 5 });
@@ -14963,9 +14969,19 @@ namespace Server.MirObjects
                                 return;
                             }
 
+                            if (auction.CurrentBuyerInfo != null)
+                            {
+                                string message = string.Format("You have been outbid on {0}. Refunded {1:#,##0} Gold.", auction.Item.FriendlyName, auction.CurrentBid);
+
+                                Envir.MailCharacter(auction.CurrentBuyerInfo, gold: auction.CurrentBid, customMessage: message);
+                            }
+
                             auction.CurrentBid = bidPrice;
                             auction.CurrentBuyerIndex = Info.Index;
                             auction.CurrentBuyerInfo = Info;
+
+                            Account.Gold -= bidPrice;
+                            Enqueue(new S.LoseGold { Gold = bidPrice });
 
                             Envir.MessageAccount(auction.SellerInfo.AccountInfo, string.Format("Someone has bid {1:#,##0} Gold for {0}", auction.Item.FriendlyName, auction.CurrentBid), ChatType.Hint);
                             Enqueue(new S.MarketSuccess { Message = string.Format("You bid {1:#,##0} Gold for {0}", auction.Item.FriendlyName, auction.CurrentBid) });
@@ -15016,6 +15032,13 @@ namespace Server.MirObjects
                         {
                             Enqueue(new S.MarketFail { Reason = 5 });
                             return;
+                        }
+
+                        if (auction.CurrentBuyerInfo != null)
+                        {
+                            string message = string.Format("You have been outbid on {0}. Refunded {1:#,##0} Gold.", auction.Item.FriendlyName, auction.CurrentBid);
+
+                            Envir.MailCharacter(auction.CurrentBuyerInfo, gold: auction.CurrentBid, customMessage: message);
                         }
 
                         Account.Auctions.Remove(auction);

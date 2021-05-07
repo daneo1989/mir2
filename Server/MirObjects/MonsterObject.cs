@@ -289,6 +289,18 @@ namespace Server.MirObjects
                     return new OmaMage(info);
                 case 137:
                     return new OmaWitchDoctor(info);
+                case 138:
+                    return new PlagueCrab(info);
+                case 139:
+                    return new CreeperPlant(info);
+                case 140:
+                    return new Nadz(info);
+                case 141:
+                    return new AvengingSpirit(info);
+                case 142:
+                    return new AvengingWarrior(info);
+                case 143:
+                    return new AxePlant(info);
 
 
                 //unfinished
