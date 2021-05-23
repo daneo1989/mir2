@@ -204,6 +204,8 @@ public abstract class Packet
                 return new C.MarketBuy();
             case (short)ClientPacketIds.MarketGetBack:
                 return new C.MarketGetBack();
+            case (short)ClientPacketIds.MarketSellNow:
+                return new C.MarketSellNow();
             case (short)ClientPacketIds.RequestUserName:
                 return new C.RequestUserName();
             case (short)ClientPacketIds.RequestChatItem:
@@ -553,6 +555,8 @@ public abstract class Packet
                 return new S.RepairItem();
             case (short)ServerPacketIds.ItemRepaired:
                 return new S.ItemRepaired();
+            case (short)ServerPacketIds.ItemSlotSizeChanged:
+                return new S.ItemSlotSizeChanged();
             case (short)ServerPacketIds.NewMagic:
                 return new S.NewMagic();
             case (short)ServerPacketIds.MagicLeveled:

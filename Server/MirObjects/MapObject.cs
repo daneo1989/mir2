@@ -325,6 +325,7 @@ namespace Server.MirObjects
                 SpawnThread = CurrentMap.Thread;
                 NodeThreaded = Envir.MobThreads[SpawnThread].ObjectsList.AddLast(this);
             }
+
             OperateTime = Envir.Time + Envir.Random.Next(OperateDelay);
 
             InSafeZone = CurrentMap != null && CurrentMap.GetSafeZone(CurrentLocation) != null;
@@ -532,6 +533,7 @@ namespace Server.MirObjects
             buff.Infinite = infinite;
             buff.Visible = visible;
             buff.Stats = stats ?? new Stats();
+            buff.Values = values ?? new int[0];
             buff.Paused = false;
 
             switch (buff.Type)
@@ -924,7 +926,6 @@ namespace Server.MirObjects
             ObjectID = reader.ReadUInt32();
             ExpireTime = reader.ReadInt64();
 
-
             if (Envir.LoadVersion <= 84)
             {
                 Values = new int[reader.ReadInt32()];
@@ -943,6 +944,7 @@ namespace Server.MirObjects
             {
                 Stackable = reader.ReadBoolean();
 
+                Values = new int[0];
                 Stats = new Stats(reader);
                 Data = new Dictionary<string, object>();
 
@@ -961,6 +963,18 @@ namespace Server.MirObjects
                     }
 
                     Data[key] = Functions.DeserializeFromBytes(array);
+                }
+
+                if (Envir.LoadVersion > 86)
+                {
+                    count = reader.ReadInt32();
+
+                    Values = new int[count];
+
+                    for (int i = 0; i < count; i++)
+                    {
+                        Values[i] = reader.ReadInt32();
+                    }
                 }
             }
         }
@@ -990,6 +1004,13 @@ namespace Server.MirObjects
                     writer.Write(bytes[i]);
                 }
             }
+
+            writer.Write(Values.Length);
+
+            for (int i = 0; i < Values.Length; i++)
+            {
+                writer.Write(Values[i]);
+            }
         }
 
         public T Get<T>(string key)
@@ -1017,7 +1038,8 @@ namespace Server.MirObjects
                 Visible = Visible,
                 Infinite = Infinite,
                 ExpireTime = ExpireTime,
-                Stats = new Stats(Stats)
+                Stats = new Stats(Stats),
+                Values = Values
             };
         }
     }

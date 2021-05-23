@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Server.MirObjects.Monsters
 {
-    class Armadillo : DigOutZombie
+    public class Armadillo : DigOutZombie
     {
         //TODO: Code Attack3 - rolling attack(disengage?)
 
@@ -31,36 +31,66 @@ namespace Server.MirObjects.Monsters
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
 
-            if (Envir.Random.Next(6) > 0)
+            switch (Envir.Random.Next(0, 6))
             {
-                Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
+                case 0:
+                    {
+                        Retreat();
+                    }
+                    break;
+                case 1:
+                    {
+                        Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
+                        int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                        if (damage == 0) return;
+
+                        DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 400, Target, damage / 2, DefenceType.ACAgility);
+                        ActionList.Add(action);
+
+                        action = new DelayedAction(DelayedType.Damage, Envir.Time + 600, Target, damage / 2, DefenceType.ACAgility);
+                        ActionList.Add(action);
+
+                        action = new DelayedAction(DelayedType.Damage, Envir.Time + 800, Target, damage / 2, DefenceType.ACAgility);
+                        ActionList.Add(action);
+                    }
+                    break;
+                default:
+                    {
+                        Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
+                        int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                        if (damage == 0) return;
+
+                        DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 400, Target, damage, DefenceType.ACAgility);
+                        ActionList.Add(action);
+                    }
+                    break;
             }
-            else
-            {
-                Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
-                LineAttack(1);
-            }
-
-            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-            if (damage == 0) return;
-            Target.Attacked(this, damage, DefenceType.ACAgility);
-
-            if (Target.Dead)
-                FindTarget();
-
         }
 
-        private void LineAttack(int distance)
+        private void Retreat()
         {
-            List<MapObject> targets = FindAllTargets(1, CurrentLocation);
-            if (targets.Count == 0) return;
+            MirDirection jumpDir = Functions.ReverseDirection(Direction);
 
-            for (int i = 0; i < 4; i++)
+            Point location;
+
+            for (int i = 0; i < 2; i++)
             {
-                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-                if (damage == 0) return;
+                location = Functions.PointMove(CurrentLocation, jumpDir, 1);
+                if (!CurrentMap.ValidPoint(location)) return;
             }
 
+            for (int i = 0; i < 2; i++)
+            {
+                location = Functions.PointMove(CurrentLocation, jumpDir, 1);
+
+                CurrentMap.GetCell(CurrentLocation).Remove(this);
+                RemoveObjects(jumpDir, 1);
+                CurrentLocation = location;
+                CurrentMap.GetCell(CurrentLocation).Add(this);
+                AddObjects(jumpDir, 1);
+            }
+
+            Broadcast(new S.ObjectBackStep { ObjectID = ObjectID, Direction = Direction, Location = location, Distance = 2 });
         }
     }
 }

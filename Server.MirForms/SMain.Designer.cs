@@ -75,6 +75,7 @@ namespace Server
             this.questInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.magicInfoToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gameshopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.itemNEWToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.serverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.balanceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -93,7 +94,6 @@ namespace Server
             this.respawnsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.monsterTunerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.InterfaceTimer = new System.Windows.Forms.Timer(this.components);
-            this.itemNEWToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.MainTabs.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -473,6 +473,13 @@ namespace Server
             this.gameshopToolStripMenuItem.Text = "Gameshop";
             this.gameshopToolStripMenuItem.Click += new System.EventHandler(this.gameshopToolStripMenuItem_Click);
             // 
+            // itemNEWToolStripMenuItem
+            // 
+            this.itemNEWToolStripMenuItem.Name = "itemNEWToolStripMenuItem";
+            this.itemNEWToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.itemNEWToolStripMenuItem.Text = "Item (Experimental)";
+            this.itemNEWToolStripMenuItem.Click += new System.EventHandler(this.itemNEWToolStripMenuItem_Click);
+            // 
             // configToolStripMenuItem1
             // 
             this.configToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -612,13 +619,6 @@ namespace Server
             // 
             this.InterfaceTimer.Enabled = true;
             this.InterfaceTimer.Tick += new System.EventHandler(this.InterfaceTimer_Tick);
-            // 
-            // itemNEWToolStripMenuItem
-            // 
-            this.itemNEWToolStripMenuItem.Name = "itemNEWToolStripMenuItem";
-            this.itemNEWToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
-            this.itemNEWToolStripMenuItem.Text = "Item NEW";
-            this.itemNEWToolStripMenuItem.Click += new System.EventHandler(this.itemNEWToolStripMenuItem_Click);
             // 
             // SMain
             // 

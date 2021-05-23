@@ -1,4 +1,5 @@
 ﻿using Server.MirDatabase;
+using System.Collections.Generic;
 using S = ServerPackets;
 
 namespace Server.MirObjects.Monsters
@@ -35,76 +36,52 @@ namespace Server.MirObjects.Monsters
             AttackTime = Envir.Time + AttackSpeed;
 
             if (!ranged)
-            {
-                Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
-                if (Envir.Random.Next(5) == 0)
+            {   
+                if (Envir.Random.Next(3) == 0)
                 {
-                    PushAttack();
-                }
-                else
-                {
-                    int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-                    if (damage == 0) return;
-                    Target.Attacked(this, damage, DefenceType.ACAgility);
-                }
-            }
-            else
-            {
-                Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID });
-                RangeAttack();
-            }
-
-            int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-
-            if (Target.Dead)
-                FindTarget();
-        }
-
-        private void RangeAttack()
-        {
-            int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
-            AttackTime = Envir.Time + AttackSpeed + 500;
-            if (damage == 0) return;
-
-            int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-
-            DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + delay, Target, damage, DefenceType.MAC);
-            ActionList.Add(action);
-
-            if (Envir.Random.Next(Settings.PoisonResistWeight) >= Target.Stats[Stat.PoisonResist])
-            {
-                if (Envir.Random.Next(7) == 0)
-                    Target.ApplyPoison(new Poison { Owner = this, Duration = 5, PType = PoisonType.Green, Value = GetAttackPower(Stats[Stat.MinSC], Stats[Stat.MaxSC]), TickSpeed = 1000 }, this);
-            }
-        }
-
-        private void PushAttack()
-        {
-            //Repulsion - Attack1 Scream Attack (utilises DelayedAction so player is hit at end of push)
-            //need to put Damage Stats (DC/MC/SC) on mob for it to push
-            int levelgap;
-
-            levelgap = 55 - Target.Level;
-            if (Envir.Random.Next(5) < 3 + levelgap)
-            {
-                if (Target.Pushed(this, Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation), 2) > 0)
-                {
-                    int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
-                    AttackTime = Envir.Time + AttackSpeed + 500;
-                    if (damage == 0) return;
-
-                    int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-
-                    DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + delay, Target, damage, DefenceType.MAC);
-                    ActionList.Add(action);
+                    SinglePushAttack(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                 }
                 else
                 {
                     Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
                     int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-                    if (damage == 0) return;
-                    Target.Attacked(this, damage, DefenceType.ACAgility);
+                    int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 400; //50 MS per Step
+
+                    DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + delay, Target, damage, DefenceType.ACAgility);
+                    ActionList.Add(action);
                 }
+            }
+            else
+            {
+                Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID, Type = 0 });
+                int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
+                if (damage == 0) return;
+
+                if (Envir.Random.Next(Settings.MagicResistWeight) >= Target.Stats[Stat.MagicResist])
+                {
+                    int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
+                    DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + delay, Target, damage, DefenceType.MACAgility, true);
+                    ActionList.Add(action);
+                }
+            }
+
+            if (Target.Dead)
+                FindTarget();
+        }
+
+        protected override void CompleteRangeAttack(IList<object> data)
+        {
+            MapObject target = (MapObject)data[0];
+            int damage = (int)data[1];
+            DefenceType defence = (DefenceType)data[2];
+
+            if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
+
+            var finalDamage = target.Attacked(this, damage, defence);
+
+            if (finalDamage > 0)
+            {
+                PoisonTarget(target, 7, 5, PoisonType.Green, 1000);
             }
         }
 

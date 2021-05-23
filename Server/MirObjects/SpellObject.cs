@@ -76,6 +76,16 @@ namespace Server.MirObjects
                 return;
             }
 
+            if (Spell == Spell.FireWall)
+            {
+                if (CurrentMap != Caster?.CurrentMap)
+                {
+                    CurrentMap.RemoveObject(this);
+                    Despawn();
+                    return;
+                }
+            }
+
             if (Spell == Spell.Reincarnation && !Caster.ActiveReincarnation)
             {
                 CurrentMap.RemoveObject(this);
@@ -205,10 +215,9 @@ namespace Server.MirObjects
                         if (ob.Race != ObjectType.Player) return;
                         if (Caster != ob && (Caster == null || (Caster.GroupMembers == null) || (!Caster.GroupMembers.Contains((PlayerObject)ob)))) return;
 
-                        var portal = Envir.Objects.SingleOrDefault(ob => ob.Race == ObjectType.Spell
-                            && ob != this && ob.Node != null
-                            && ((SpellObject)ob).Spell == Spell.Portal
-                            && ((SpellObject)ob).Caster == Caster);
+                        var portal = Envir.Spells.SingleOrDefault(ob => ob != this && ob.Node != null
+                            && ob.Spell == Spell.Portal
+                            && ob.Caster == Caster);
 
                         if (portal != null)
                         {
@@ -379,9 +388,19 @@ namespace Server.MirObjects
         {
             throw new NotSupportedException();
         }
+
+        public override void Spawned()
+        {
+            base.Spawned();
+
+            Envir.Spells.Add(this);
+        }
+
         public override void Despawn()
         {
             base.Despawn();
+
+            Envir.Spells.Remove(this);
 
             if (Spell == Spell.Reincarnation && Caster != null && Caster.Node != null)
             {
@@ -401,10 +420,9 @@ namespace Server.MirObjects
 
             if (Spell == Spell.Portal && Caster != null)
             {
-                var portal = Envir.Objects.SingleOrDefault(ob => ob.Race == ObjectType.Spell 
-                    && ob.Node != null && ob != this
-                    && ((SpellObject)ob).Spell == Spell.Portal    
-                    && ((SpellObject)ob).Caster == Caster);
+                var portal = Envir.Spells.SingleOrDefault(ob => ob.Node != null && ob != this
+                    && ob.Spell == Spell.Portal    
+                    && ob.Caster == Caster);
 
                 if (portal != null)
                 {

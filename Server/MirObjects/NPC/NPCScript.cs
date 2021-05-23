@@ -112,7 +112,9 @@ namespace Server.MirObjects
 
         public float PriceRate(PlayerObject player, bool baseRate = false)
         {
-            if (!(Envir.GetObject(player.NPCObjectID) is NPCObject callingNPC)) 
+            var callingNPC = Envir.NPCs.SingleOrDefault(x => x.ObjectID == player.NPCObjectID);
+
+            if (callingNPC == null)
             {
                 return 1F;
             }
@@ -183,6 +185,8 @@ namespace Server.MirObjects
 
             if (loadedNPC != null)
             {
+                loadedNPC.UsedGoods.Clear();
+
                 string path = Path.Combine(Settings.GoodsPath, loadedNPC.Info.Index.ToString() + ".msd");
 
                 if (!File.Exists(path)) return;

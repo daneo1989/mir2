@@ -1,5 +1,17 @@
 ﻿using System;
 
+public enum MouseCursor : byte
+{
+    None,
+    Default,
+    Attack,
+    AttackRed,
+    NPCTalk,
+    TextPrompt,
+    Trash,
+    Upgrade
+}
+
 public enum PanelType : byte
 {
     Buy,
@@ -462,7 +474,7 @@ public enum Monster : ushort
     SeedingsGeneral = 282, // Done (DG)
     RestlessJar = 283,
     GeneralJinmYo = 284, // TODO: AI Incomplete - Thunderbolt and orb at end of lib file, not sure what this does? See notes in AI file (DG).
-    Bunny = 285, 
+    Bunny = 285, // No AI
     Tucson = 286, //No AI or spell animations (DG)
     TucsonFighter = 287, // Use AI 44 - No spell animation (DG)
     TucsonMage = 288, // Done (DG)
@@ -495,10 +507,10 @@ public enum Monster : ushort
     OmaAssassin = 314, // Done (DG)
     OmaMage = 315, // Done (DG)
     OmaWitchDoctor = 316,
-    LightningBead = 317,
-    HealingBead = 318,
-    PowerUpBead = 319,
-    DarkOmaKing = 320,
+    LightningBead = 317, // Minion of DarkOmaKing
+    HealingBead = 318, // Minion of DarkOmaKing
+    PowerUpBead = 319, // Minion of DarkOmaKing
+    DarkOmaKing = 320, //TODO - BOSS AI
     CaveMage = 321,
     Mandrill = 322, // INCOMPLETE - TODO: TELEPORT NEEDS CODING
     PlagueCrab = 323, // Done (DG) - Note: There are seven frames missing from the DrawEffect in the lib (causes die effect to look off).
@@ -509,62 +521,61 @@ public enum Monster : ushort
     Nadz = 328, // Done (DG)
     AvengingSpirit = 329, //Done (DG)
     AvengingWarrior = 330, //Done (DG)
-    AxePlant = 331,
+    AxePlant = 331, //Done (DG)
     WoodBox = 332,
     ClawBeast = 333,
-    KillerPlant = 334,
-    SackWarrior = 335,
-    WereTiger = 336,
-    KingHydrax = 337,
-    Hydrax = 338,
-    HornedMage = 339,
-    Basiloid = 340,
-    HornedArcher = 341,
-    ColdArcher = 342,
-    HornedWarrior = 343,
-    FloatingRock = 344,
+    KillerPlant = 334, //TODO - BOSS AI
+    SackWarrior = 335, // Done (DG)
+    WereTiger = 336, // Done (DG) - USE AI 113 (BloodBaboon) for Attack2. 
+    KingHydrax = 337, //TODO - BOSS AI
+    Hydrax = 338, // Done (DG) - No AI
+    HornedMage = 339, // Done (jxtulong)
+    Blank4 = 340,
+    HornedArcher = 341, // Incomplete AI (DG) - Need to code the buffs.
+    ColdArcher = 342, // Done (DG) - //TODO - check wemade file for arrow issue
+    HornedWarrior = 343, // TODO - HAS BUFF MECHANIC
+    FloatingRock = 344, // Done (DG)
     ScalyBeast = 345,
     HornedSorceror = 346,
     BoulderSpirit = 347,
     HornedCommander = 348,
     MoonStone = 349,
-
     SunStone = 350,
     LightningStone = 351,
-    Turtlegrass = 352,
-    Mantree = 353,
-    Bear = 354,
-    Leopard = 355,
+    Turtlegrass = 352, // Done (DG)
+    ManTree = 353, //Done (DG)
+    Bear = 354, //Done (DG)
+    Leopard = 355, // Basic mob (No AI or spell animations) (DG)
     ChieftainArcher = 356,
-    ChieftainSword = 357,
+    ChieftainSword = 357, //TODO - BOSS AI
     StoningSpider = 358, //Archer Spell mob (not yet coded)
     VampireSpider = 359, //Archer Spell mob
     SpittingToad = 360, //Archer Spell mob
     SnakeTotem = 361, //Archer Spell mob
     CharmedSnake = 362, //Archer Spell mob
-    FrozenSoldier = 363,
-    FrozenFighter = 364,
-    FrozenArcher = 365,
-    FrozenKnight = 366,
-    FrozenGolem = 367,
-    IcePhantom = 368,
-    SnowWolf = 369,
-    SnowWolfKing = 370,
-    WaterDragon = 371,
-    BlackTortoise = 372,
-    Manticore = 373,
-    DragonWarrior = 374,
-    DragonArcher = 375,
-    Kirin = 376,
+    FrozenSoldier = 363, // Basic mob (No AI or spell animations) (DG)
+    FrozenFighter = 364, // Done (DG)
+    FrozenArcher = 365, //Done (DG) - Use AI 8 (AxeSkeleton)
+    FrozenKnight = 366, // Done (DG)
+    FrozenGolem = 367, // Done (DG) - Basic Attack1 mob
+    IcePhantom = 368, //Done (DG) - //TODO - AI needs revisiting (blue explosion and snakes)
+    SnowWolf = 369, // Done (DG)
+    SnowWolfKing = 370, //TODO - BOSS AI
+    WaterDragon = 371, //TODO - BOSS AI
+    BlackTortoise = 372, //Done (DG) //TODO - figure out what the blue flashes are for (Critical hits??)
+    Manticore = 373, //TODO - BOSS AI
+    DragonWarrior = 374, //Done (DG)
+    DragonArcher = 375, //TODO - Wind Arrow spell and Tornado (minion?)    
+    Kirin = 376, // Done (jxtulong)
     Guard3 = 377,
     ArcherGuard3 = 378,
     Bunny2 = 379,
-    FrozenMiner = 380,
-    FrozenAxeman = 381,
-    FrozenMagician = 382,
-    SnowYeti = 383,
-    IceCrystalSoldier = 384,
-    DarkWraith = 385,
+    FrozenMiner = 380, // Done (jxtulong)
+    FrozenAxeman = 381, // Done (jxtulong)
+    FrozenMagician = 382, // Done (jxtulong)
+    SnowYeti = 383, // Done (jxtulong)
+    IceCrystalSoldier = 384, // Done (jxtulong)
+    DarkWraith = 385, // Done (jxtulong)
     DarkSpirit = 386,
     CrystalBeast = 387,
     RedOrb = 388,
@@ -1230,6 +1241,8 @@ public enum SpellEffect : byte
     Stunned,
     IcePillar,
     KingGuard,
+    MonsterMACBuff,
+    Tester
 }
 
 
@@ -1263,6 +1276,7 @@ public enum BuffType : byte
     ImmortalSkin,
     MagicShield,
     ElementalBarrier,
+    MonsterMACBuff,
 
     //special
     GameMaster = 100,
@@ -1415,6 +1429,7 @@ public enum ServerPacketIds : short
     CraftItem,
     RepairItem,
     ItemRepaired,
+    ItemSlotSizeChanged,
     NewMagic,
     RemoveMagic,
     MagicLeveled,
@@ -1622,6 +1637,7 @@ public enum ClientPacketIds : short
     MarketPage,
     MarketBuy,
     MarketGetBack,
+    MarketSellNow,
     RequestUserName,
     RequestChatItem,
     EditGuildMember,

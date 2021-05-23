@@ -63,9 +63,6 @@ namespace Server.MirObjects.Monsters
                 AttackTime = Envir.Time + AttackSpeed;
                 ActionTime = Envir.Time + 300;
             }
-
-            if (Envir.Random.Next(10) == 0)
-                Target.ApplyPoison(new Poison { PType = PoisonType.Stun, Duration = 3, TickSpeed = 1000 }, this);
         }
         private void LineAttack(int distance)
         {
@@ -92,6 +89,13 @@ namespace Server.MirObjects.Monsters
                         {
                             if (!ob.IsAttackTarget(this)) continue;
                             ob.Attacked(this, damage, DefenceType.MACAgility);
+
+                            if (Envir.Random.Next(10) == 0)
+                            {
+                                int poisonLength = 5;
+                                Target.ApplyPoison(new Poison { PType = PoisonType.Stun, Duration = poisonLength, TickSpeed = 1000 }, this);
+                                Broadcast(new S.ObjectEffect { ObjectID = Target.ObjectID, Effect = SpellEffect.Stunned, Time = (uint)poisonLength * 1000 });
+                            }
                         }
                         else continue;
 

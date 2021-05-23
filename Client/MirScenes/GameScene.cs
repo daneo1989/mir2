@@ -117,6 +117,8 @@ namespace Client.MirScenes
         public NoticeDialog NoticeDialog;
 
         public TimerDialog TimerControl;
+        public CompassDialog CompassControl;
+
 
         public static List<ItemInfo> ItemInfoList = new List<ItemInfo>();
         public static List<UserId> UserIdList = new List<UserId>();
@@ -264,6 +266,7 @@ namespace Client.MirScenes
             KeyboardLayoutDialog = new KeyboardLayoutDialog { Parent = this, Visible = false };
 
             TimerControl = new TimerDialog { Parent = this, Visible = false };
+            CompassControl = new CompassDialog { Parent = this, Visible = false };
 
             for (int i = 0; i < OutputLines.Length; i++)
                 OutputLines[i] = new MirLabel
@@ -275,6 +278,53 @@ namespace Client.MirScenes
                     Location = new Point(20, 25 + i * 13),
                     OutLine = true,
                 };
+        }
+
+        private void UpdateMouseCursor()
+        {
+            if (!Settings.UseMouseCursors) return;
+
+            if (GameScene.HoverItem != null)
+            {
+                if (GameScene.SelectedCell != null && GameScene.SelectedCell.Item != null && GameScene.SelectedCell.Item.Info.Type == ItemType.Gem && CMain.Ctrl)
+                {
+                    CMain.SetMouseCursor(MouseCursor.Upgrade);
+                }
+                else
+                {
+                    CMain.SetMouseCursor(MouseCursor.Default);
+                }
+            }
+            else if (MapObject.MouseObject != null)
+            {
+                switch (MapObject.MouseObject.Race)
+                {
+                    case ObjectType.Monster:
+                        CMain.SetMouseCursor(MouseCursor.Attack);
+                        break;
+                    case ObjectType.Merchant:
+                        CMain.SetMouseCursor(MouseCursor.NPCTalk);
+                        break;
+                    case ObjectType.Player:
+                        if (CMain.Shift)
+                        {
+                            CMain.SetMouseCursor(MouseCursor.AttackRed);
+                        }
+                        else
+                        {
+                            CMain.SetMouseCursor(MouseCursor.Default);
+                        }
+                        break;
+                    default:
+                        CMain.SetMouseCursor(MouseCursor.Default);
+                        break;
+                }
+            }
+            else
+            {
+                CMain.SetMouseCursor(MouseCursor.Default);
+            }
+
         }
 
         public void OutputMessage(string message, OutputMessageType type = OutputMessageType.Normal)
@@ -875,7 +925,6 @@ namespace Client.MirScenes
         {
             if (MapControl != null && !MapControl.IsDisposed)
                 MapControl.DrawControl();
-
             base.DrawControl();
 
 
@@ -919,6 +968,7 @@ namespace Client.MirScenes
             }
 
             TimerControl.Process();
+            CompassControl.Process();
 
             MirItemCell cell = MouseControl as MirItemCell;
 
@@ -1016,6 +1066,8 @@ namespace Client.MirScenes
             DialogProcess();
 
             ProcessOuput();
+
+            UpdateMouseCursor();
         }
 
         public void DialogProcess()
@@ -1299,6 +1351,9 @@ namespace Client.MirScenes
                     break;
                 case (short)ServerPacketIds.ItemRepaired:
                     ItemRepaired((S.ItemRepaired)p);
+                    break;
+                case (short)ServerPacketIds.ItemSlotSizeChanged:
+                    ItemSlotSizeChanged((S.ItemSlotSizeChanged)p);
                     break;
                 case (short)ServerPacketIds.NewMagic:
                     NewMagic((S.NewMagic)p);
@@ -3572,6 +3627,35 @@ namespace Client.MirScenes
             }
         }
 
+        private void ItemSlotSizeChanged(S.ItemSlotSizeChanged p)
+        {
+            UserItem item = null;
+            for (int i = 0; i < User.Inventory.Length; i++)
+            {
+                if (User.Inventory[i] != null && User.Inventory[i].UniqueID == p.UniqueID)
+                {
+                    item = User.Inventory[i];
+                    break;
+                }
+            }
+
+            if (item == null)
+            {
+                for (int i = 0; i < User.Equipment.Length; i++)
+                {
+                    if (User.Equipment[i] != null && User.Equipment[i].UniqueID == p.UniqueID)
+                    {
+                        item = User.Equipment[i];
+                        break;
+                    }
+                }
+            }
+
+            if (item == null) return;
+
+            item.SetSlotSize(p.SlotSize);
+        }
+
         private void ItemUpgraded(S.ItemUpgraded p)
         {
             UserItem item = null;
@@ -3590,7 +3674,6 @@ namespace Client.MirScenes
             item.AddedStats.Add(p.Item.AddedStats);
 
             item.MaxDura = p.Item.MaxDura;
-            item.RefinedValue = p.Item.RefinedValue;
             item.RefineAdded = p.Item.RefineAdded;
             
             GameScene.Scene.InventoryDialog.DisplayItemGridEffect(item.UniqueID, 0);
@@ -3916,6 +3999,10 @@ namespace Client.MirScenes
                     case SpellEffect.KingGuard:
                         ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.KingGuard], 753, 10, 1000, ob) { Blend = false });
                         break;
+                    case SpellEffect.MonsterMACBuff: //loop - look @ MagicShield for start / loop / end
+                        ob.Effects.Add(new BuffEffect(Libraries.Monsters[(ushort)Monster.HornedArcher], 477, 10, 1000, ob, true, BuffType.MonsterMACBuff) { Repeat = true });
+                        break;
+
                 }
 
                 return;
@@ -4084,6 +4171,10 @@ namespace Client.MirScenes
                     SoundManager.PlaySound(10091);
                     Effect HitWall = new Effect(Libraries.Effect, 8 * p.Value, 3, 240, p.Location) { Light = 0 };
                     MapControl.Effects.Add(HitWall);
+                    break;
+                case SpellEffect.Tester:
+                    Effect eff = new Effect(Libraries.Effect, 328, 10, 500, p.Location) { Light = 0 };
+                    MapControl.Effects.Add(eff);
                     break;
             }
         }
@@ -4386,7 +4477,7 @@ namespace Client.MirScenes
                 MapObject ob = MapControl.Objects[i];
                 if (ob.ObjectID != p.ObjectID) continue;
 
-                ((PlayerObject)ob).JumpDistance = p.Distance;
+                ob.JumpDistance = p.Distance;
 
                 ob.ActionFeed.Add(new QueuedAction { Action = MirAction.Jump, Direction = p.Direction, Location = p.Location });
 
@@ -4627,7 +4718,13 @@ namespace Client.MirScenes
                     MirMessageBox.Show("You are too far away from the Trust Merchant.");
                     break;
                 case 8:
-                    MirMessageBox.Show("You cannot hold enough gold to get your sale");
+                    MirMessageBox.Show("You cannot hold enough gold to get your sale.");
+                    break;
+                case 9:
+                    MirMessageBox.Show("This item has not met the minimum bid yet.");
+                    break;
+                case 10:
+                    MirMessageBox.Show("Auction has already ended for this item.");
                     break;
             }
 
@@ -5033,7 +5130,7 @@ namespace Client.MirScenes
             {
                 if (buff == null)
                 {
-                    buff = new ClientBuff { Type = BuffType.Guild, ObjectID = User.ObjectID, Caster = "Guild", Infinite = true };
+                    buff = new ClientBuff { Type = BuffType.Guild, ObjectID = User.ObjectID, Caster = "Guild", Infinite = true, Values = new int[0] };
 
                     Buffs.Add(buff);
                     BuffsDialog.CreateBuff(buff);
@@ -5838,7 +5935,7 @@ namespace Client.MirScenes
                     fishingItem = true;
                     break;
                 case ItemType.Weapon:
-                    if (HoverItem.Info.Shape == 49 || HoverItem.Info.Shape == 50)
+                    if (Globals.FishingRodShapes.Contains(HoverItem.Info.Shape))
                         fishingItem = true;
                     break;
                 default:
@@ -5894,7 +5991,6 @@ namespace Client.MirScenes
                     Location = new Point(4, ItemLabel.DisplayRectangle.Bottom),
                     OutLine = true,
                     Parent = ItemLabel,
-                    //Text = string.Format("DC + {0}~{1}", minValue, maxValue + addValue)
                     Text = text
                 };
 
@@ -5924,7 +6020,6 @@ namespace Client.MirScenes
                     Location = new Point(4, ItemLabel.DisplayRectangle.Bottom),
                     OutLine = true,
                     Parent = ItemLabel,
-                    //Text = string.Format("MC + {0}~{1}", minValue, maxValue + addValue)
                     Text = text
                 };
 
@@ -8957,12 +9052,10 @@ namespace Client.MirScenes
             if (MapObject.User.MouseOver(MouseLocation))
                 MapObject.User.DrawName();
 
-
-
-
             DXManager.SetSurface(oldSurface);
             surface.Dispose();
             TextureValid = true;
+
         }
         protected internal override void DrawControl()
         {
@@ -8977,9 +9070,13 @@ namespace Client.MirScenes
 
             float oldOpacity = DXManager.Opacity;
 
+            if (MapObject.User.Dead) DXManager.SetGrayscale(true);
+
             DXManager.SetOpacity(Opacity);
             DXManager.Sprite.Draw(ControlTexture, new Rectangle(0, 0, Settings.ScreenWidth, Settings.ScreenHeight), Vector3.Zero, Vector3.Zero, Color.White);
             DXManager.SetOpacity(oldOpacity);
+
+            if (MapObject.User.Dead) DXManager.SetGrayscale(false);
 
             CleanTime = CMain.Time + Settings.CleanDelay;
         }
