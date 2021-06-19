@@ -145,13 +145,18 @@ namespace Client.MirObjects
                     DrawColour = Color.Purple;
                     break;
                 case PoisonType.Stun:
+                case PoisonType.Dazed:
                     DrawColour = Color.Yellow;
+                    break;
+                case PoisonType.Blindness:
+                    DrawColour = Color.MediumVioletRed;
                     break;
                 case PoisonType.Frozen:
                     DrawColour = Color.Blue;
                     break;
                 case PoisonType.Paralysis:
                 case PoisonType.LRParalysis:
+                //case PoisonType.FlamingMutantWeb:
                     DrawColour = Color.Gray;
                     break;
             }

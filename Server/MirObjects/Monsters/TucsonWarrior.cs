@@ -25,13 +25,11 @@ namespace Server.MirObjects.Monsters
 
             if (x > 2 || y > 2) return false;
 
-
             return (x <= 1 && y <= 1) || (x == y || x % 2 == y % 2);
         }
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
@@ -47,7 +45,11 @@ namespace Server.MirObjects.Monsters
             if (!range && Envir.Random.Next(5) > 0)
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
-                HalfmoonAttack(300);
+
+                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                if (damage == 0) return;
+
+                HalfmoonAttack(damage, 300);
             }
             else
             {

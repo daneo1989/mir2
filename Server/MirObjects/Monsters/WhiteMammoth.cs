@@ -41,7 +41,7 @@ namespace Server.MirObjects.Monsters
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 2 });
 
-                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                 if (damage == 0) return;
 
                 DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, Target, damage, DefenceType.ACAgility, true);
@@ -72,12 +72,9 @@ namespace Server.MirObjects.Monsters
 
                         if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) continue;
 
-                        var finalDamage = target.Attacked(this, damage);
+                        if (target.Attacked(this, damage) <= 0) continue;
 
-                        if (finalDamage > 0)
-                        {
-                            PoisonTarget(target, 0, 5, PoisonType.Stun, 2000);
-                        }
+                        PoisonTarget(target, 0, 5, PoisonType.Dazed, 2000);
                     }
 
                     return;

@@ -23,18 +23,20 @@ namespace Server.MirObjects.Monsters
 
             if (x > 2 || y > 2) return false;
 
-
             return (x <= 1 && y <= 1) || (x == y || x % 2 == y % 2);
         }
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
                 return;
             }
+
+            ActionTime = Envir.Time + 300;
+            AttackTime = Envir.Time + AttackSpeed;
+            ShockTime = 0;
 
             Direction = Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation);
 
@@ -54,57 +56,16 @@ namespace Server.MirObjects.Monsters
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
 
-                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                 if (damage == 0) return;
 
                 DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, Target, damage, DefenceType.ACAgility);
                 ActionList.Add(action);
 
-                SmashAttack(2);
-            }
+                damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                if (damage == 0) return;
 
-            ActionTime = Envir.Time + 300;
-            AttackTime = Envir.Time + AttackSpeed;
-            ShockTime = 0;
-        }
-
-        private void SmashAttack(int distance)
-        {
-            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-            if (damage == 0) return;
-
-            for (int i = 1; i <= distance; i++)
-            {
-                Point target = Functions.PointMove(CurrentLocation, Direction, i);
-
-                if (target == Target.CurrentLocation)
-                {
-                    DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 1000, Target, damage, DefenceType.ACAgility);
-                    ActionList.Add(action);
-                }
-                else
-                {
-                    if (!CurrentMap.ValidPoint(target)) continue;
-
-                    Cell cell = CurrentMap.GetCell(target);
-                    if (cell.Objects == null) continue;
-
-                    for (int o = 0; o < cell.Objects.Count; o++)
-                    {
-                        MapObject ob = cell.Objects[o];
-                        if (ob.Race == ObjectType.Monster || ob.Race == ObjectType.Player)
-                        {
-                            if (!ob.IsAttackTarget(this)) continue;
-
-                            DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 1000, ob, damage, DefenceType.ACAgility);
-                            ActionList.Add(action);
-                        }
-                        else continue;
-
-                        break;
-                    }
-
-                }
+                LineAttack(damage, 2, 300);
             }
         }
     }

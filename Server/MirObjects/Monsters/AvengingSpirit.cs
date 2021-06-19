@@ -4,11 +4,8 @@ using S = ServerPackets;
 
 namespace Server.MirObjects.Monsters
 {
-    public class AvengingSpirit : MonsterObject
+    public class AvengingSpirit : AxeSkeleton
     {
-        public long FearTime;
-        public byte AttackRange = 5;
-
         protected internal AvengingSpirit(MonsterInfo info)
             : base(info)
         {
@@ -36,14 +33,17 @@ namespace Server.MirObjects.Monsters
             AttackTime = Envir.Time + AttackSpeed;
 
             if (!ranged)
-            {   
+            {
+                Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
+
                 if (Envir.Random.Next(3) == 0)
                 {
-                    SinglePushAttack(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                    int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+
+                    SinglePushAttack(damage);
                 }
                 else
                 {
-                    Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
                     int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                     int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 400; //50 MS per Step
 
@@ -57,16 +57,10 @@ namespace Server.MirObjects.Monsters
                 int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                 if (damage == 0) return;
 
-                if (Envir.Random.Next(Settings.MagicResistWeight) >= Target.Stats[Stat.MagicResist])
-                {
-                    int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-                    DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + delay, Target, damage, DefenceType.MACAgility, true);
-                    ActionList.Add(action);
-                }
+                int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
+                DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + delay, Target, damage, DefenceType.MACAgility, true);
+                ActionList.Add(action);
             }
-
-            if (Target.Dead)
-                FindTarget();
         }
 
         protected override void CompleteRangeAttack(IList<object> data)
@@ -82,59 +76,6 @@ namespace Server.MirObjects.Monsters
             if (finalDamage > 0)
             {
                 PoisonTarget(target, 7, 5, PoisonType.Green, 1000);
-            }
-        }
-
-        protected override void ProcessTarget()
-        {
-            if (Target == null || !CanAttack) return;
-
-            if (InAttackRange() && Envir.Time < FearTime)
-            {
-                Attack();
-                return;
-            }
-
-            FearTime = Envir.Time + 3000;
-
-            if (Envir.Time < ShockTime)
-            {
-                Target = null;
-                return;
-            }
-
-            int dist = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation);
-
-            if (dist >= AttackRange)
-                MoveTo(Target.CurrentLocation);
-            else
-            {
-                MirDirection dir = Functions.DirectionFromPoint(Target.CurrentLocation, CurrentLocation);
-
-                if (Walk(dir)) return;
-
-                switch (Envir.Random.Next(2)) //No favour
-                {
-                    case 0:
-                        for (int i = 0; i < 7; i++)
-                        {
-                            dir = Functions.NextDir(dir);
-
-                            if (Walk(dir))
-                                return;
-                        }
-                        break;
-                    default:
-                        for (int i = 0; i < 7; i++)
-                        {
-                            dir = Functions.PreviousDir(dir);
-
-                            if (Walk(dir))
-                                return;
-                        }
-                        break;
-                }
-
             }
         }
     }

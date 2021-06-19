@@ -156,13 +156,7 @@ namespace Server.MirObjects.Monsters
 
                 if (targets[i].Attacked(this, damage, DefenceType.MACAgility) <= 0) continue;
 
-                if (Envir.Random.Next(Settings.PoisonResistWeight) >= targets[i].Stats[Stat.PoisonResist])
-                {
-                    if (Envir.Random.Next(5) == 0)
-                    {
-                        targets[i].ApplyPoison(new Poison { PType = PoisonType.Frozen, Duration = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]), TickSpeed = 1000 }, this);
-                    }
-                }
+                PoisonTarget(targets[i], 5, GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]), PoisonType.Frozen, 1000);
             }
         }
 
@@ -173,8 +167,6 @@ namespace Server.MirObjects.Monsters
             int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
 
             List<MapObject> targets = FindAllTargets(7, CurrentLocation, false);
-
-            if (targets.Count == 0) return;
 
             for (int i = 0; i < targets.Count; i++)
             {
@@ -197,8 +189,7 @@ namespace Server.MirObjects.Monsters
 
             target.Attacked(this, damage, defence);
 
-            if (Envir.Random.Next(5) == 0)
-                target.ApplyPoison(new Poison { Owner = this, Duration = 5, PType = PoisonType.Frozen, Value = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]), TickSpeed = 1000 }, this);
+            PoisonTarget(target, 5, 5, PoisonType.Frozen, 1000);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Server.MirObjects.Monsters
         {
             get
             {
-                return 8;
+                return 6;
             }
         }
 
@@ -47,7 +47,8 @@ namespace Server.MirObjects.Monsters
                 int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                 if (damage == 0) return;
 
-                Target.Attacked(this, damage, DefenceType.MACAgility);
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, Target, damage, DefenceType.ACAgility);
+                ActionList.Add(action);
             }
             else
             {
@@ -57,12 +58,8 @@ namespace Server.MirObjects.Monsters
                     int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                     if (damage == 0) return;
 
-                    if (Envir.Random.Next(Settings.MagicResistWeight) >= Target.Stats[Stat.MagicResist])
-                    {
-                        int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-                        DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + delay, Target, damage, DefenceType.MACAgility, false);
-                        ActionList.Add(action);
-                    }
+                    DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + 500, Target, damage, DefenceType.MACAgility, false);
+                    ActionList.Add(action);
                 }
                 else
                 {
@@ -70,17 +67,10 @@ namespace Server.MirObjects.Monsters
                     int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                     if (damage == 0) return;
 
-                    if (Envir.Random.Next(Settings.MagicResistWeight) >= Target.Stats[Stat.MagicResist])
-                    {
-                        int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-                        DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + delay, Target, damage, DefenceType.MACAgility, true);
-                        ActionList.Add(action);
-                    }
+                    DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + 500, Target, damage, DefenceType.MACAgility, true);
+                    ActionList.Add(action);
                 }
             }
-
-            if (Target.Dead)
-                FindTarget();
         }
 
         protected override void CompleteRangeAttack(IList<object> data)

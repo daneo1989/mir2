@@ -1,35 +1,30 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using Server.MirDatabase;
 using Server.MirEnvir;
 using S = ServerPackets;
-using System.Collections.Generic;
 
 namespace Server.MirObjects.Monsters
 {
-    class MudWarrior : ZumaMonster
+    public class Jar2 : Jar1
     {
-        protected virtual byte AttackRange
+        protected override byte AttackRange
         {
             get
             {
-                return 8;
+                return 6;
             }
         }
 
-        protected internal MudWarrior(MonsterInfo info)
+        protected internal Jar2(MonsterInfo info)
             : base(info)
         {
-        }
 
-        protected override bool InAttackRange()
-        {
-            return CurrentMap == Target.CurrentMap && Functions.InRange(CurrentLocation, Target.CurrentLocation, AttackRange);
         }
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
@@ -44,16 +39,20 @@ namespace Server.MirObjects.Monsters
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
 
-            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-            if (!ranged)
+            if (!ranged && Envir.Random.Next(3) == 0)
             {
+                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
                 if (damage == 0) return;
 
-                Target.Attacked(this, damage, DefenceType.ACAgility);
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, Target, damage, DefenceType.MACAgility);
+                ActionList.Add(action);
             }
             else
             {
+                int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
+
                 Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID });
                 AttackTime = Envir.Time + AttackSpeed + 500;
                 if (damage == 0) return;
@@ -61,30 +60,19 @@ namespace Server.MirObjects.Monsters
                 DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + 500, Target, damage, DefenceType.MAC);
                 ActionList.Add(action);
             }
-
-
-            if (Target.Dead)
-                FindTarget();
-
         }
 
-        protected override void ProcessTarget()
+        protected override void CompleteRangeAttack(IList<object> data)
         {
-            if (Target == null) return;
+            MapObject target = (MapObject)data[0];
+            int damage = (int)data[1];
+            DefenceType defence = (DefenceType)data[2];
 
-            if (InAttackRange() && CanAttack)
-            {
-                Attack();
-                return;
-            }
+            if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
 
-            if (Envir.Time < ShockTime)
-            {
-                Target = null;
-                return;
-            }
+            if (target.Attacked(this, damage, defence) <= 0) return;
 
-            MoveTo(Target.CurrentLocation);
+            PoisonTarget(target, 5, 5, PoisonType.Frozen, 1000);
         }
     }
 }

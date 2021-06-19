@@ -30,7 +30,6 @@ namespace Server.MirObjects.Monsters
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
@@ -47,59 +46,47 @@ namespace Server.MirObjects.Monsters
             if (Envir.Random.Next(3) > 0)
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 0 });
-                Attack1(3);
+
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 300, Target, 0, DefenceType.AC, true);
+                ActionList.Add(action);
             }
             else
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
-                PushAttack(1);
-            }
 
-        }
-
-        //360 degree swing Attack - hits all players within 3 spaces of mob in 360 degrees.
-        private void Attack1(int distance)
-        {
-            List<MapObject> targets = FindAllTargets(3, CurrentLocation);
-            if (targets.Count == 0) return;
-
-            for (int i = 0; i < targets.Count; i++)
-            {
                 int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-                if (damage == 0) return;
-                if (targets[i].Attacked(this, damage, DefenceType.AC) <= 0) return;
-            }
 
+                SinglePushAttack(damage);
+            }
         }
 
-        //Repulsion - Attack2 Scream Attack (utilises DelayedAction so player is hit at end of push)
-        //need to put Damage Stats (DC/MC/SC) on mob for it to push
-        private void PushAttack(int distance)
+        protected override void CompleteAttack(IList<object> data)
         {
-            int levelGap = 5;
-            int mobLevel = this.Level;
-            int targetLevel = Target.Level;
+            MapObject target = (MapObject)data[0];
+            int damage = (int)data[1];
+            DefenceType defence = (DefenceType)data[2];
+            bool halfmoon = data.Count >= 4 && (bool)data[3];
 
-            if ((targetLevel <= mobLevel + levelGap))
+            if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
+
+            if (halfmoon)
             {
-                if (Target.Pushed(this, Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation), 2) > 0)
+                List<MapObject> targets = FindAllTargets(3, CurrentLocation);
+                if (targets.Count == 0) return;
+
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
-                    AttackTime = Envir.Time + AttackSpeed + 500;
-                    if (damage == 0) return;
-
-                    int delay = Functions.MaxDistance(CurrentLocation, Target.CurrentLocation) * 50 + 500; //50 MS per Step
-
-                    DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + delay, Target, damage, DefenceType.MAC);
-                    ActionList.Add(action);
-
-                    if (Envir.Random.Next(Settings.PoisonResistWeight) >= Target.Stats[Stat.PoisonResist])
-                    {
-                        if (Envir.Random.Next(3) == 0)
-                            Target.ApplyPoison(new Poison { Owner = this, Duration = 5, PType = PoisonType.Paralysis, Value = GetAttackPower(Stats[Stat.MinSC], Stats[Stat.MaxSC]), TickSpeed = 1000 }, this);
-                    }
+                    int damage2 = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+                    if (damage2 == 0) return;
+                    if (targets[i].Attacked(this, damage2, defence) <= 0) return;
                 }
             }
-        }
+            else
+            {
+                if (target.Attacked(this, damage, defence) <= 0) return;
+
+                PoisonTarget(target, 3, 5, PoisonType.Paralysis);
+            }
+        }  
     }
 }

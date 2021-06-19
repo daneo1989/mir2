@@ -13,7 +13,7 @@ namespace Server.MirObjects
         /// Param0 MapObject (Target) | Param1 Damage | Param2 Defence | Param3 damageWeapon | Param4 UserMagic | Param5 FinalHit
         /// </summary>
         Damage,
-        RangeDamage,
+        RangeDamage,        
         Spawn,
         Die,
         Recall,

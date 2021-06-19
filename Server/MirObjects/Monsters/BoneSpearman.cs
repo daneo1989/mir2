@@ -23,29 +23,28 @@ namespace Server.MirObjects.Monsters
 
             if (x > 2 || y > 2) return false;
 
-
             return (x <= 1 && y <= 1) || (x == y || x % 2 == y % 2);
         }
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
                 return;
             }
 
-            Direction = Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation);
-            Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
-            LineAttack(2, 250);
-
-
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
             ShockTime = 0;
 
+            Direction = Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation);
+            Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
 
+            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+            if (damage == 0) return;
+
+            LineAttack(damage, 2, 250);
         }        
     }
 }

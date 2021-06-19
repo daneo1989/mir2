@@ -89,14 +89,19 @@ namespace Server.MirObjects.Monsters
                 return;
             }
 
-            if (!ChildRock) 
+            if (!ChildRock)
+            {
                 Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID });
+            }
             else Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
 
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
 
-            if (Envir.Random.Next(8) == 0 && !ChildRock) Target.ApplyPoison(new Poison { PType = PoisonType.Paralysis, Duration = 3, TickSpeed = 1000 }, this, true);
+            if (Envir.Random.Next(8) == 0 && !ChildRock)
+            {
+                Target.ApplyPoison(new Poison { PType = PoisonType.Paralysis, Duration = 3, TickSpeed = 1000 }, this, true);
+            }
 
             if (Target.Dead)
                 Die();
@@ -192,16 +197,13 @@ namespace Server.MirObjects.Monsters
                 Target.ApplyPoison(new Poison { PType = PoisonType.Paralysis, Duration = 3, TickSpeed = 1000 },this, true);
                 Target.InTrapRock = true;
 
-                MonsterObject mob = null;
-                TrapRock childmob = null;
-
                 for (byte i = 0; i <= 6; i += 2)
                 {
                     if (i == SpawnCorner) continue;
-                    mob = GetMonster(Envir.GetMonsterInfo(Name));
+                    var mob = GetMonster(Envir.GetMonsterInfo(Name));
 
                     if (mob == null) return;
-                    childmob = (TrapRock)mob;
+                    var childmob = (TrapRock)mob;
 
                     if (childmob.Spawn(CurrentMap, Functions.PointMove(Target.CurrentLocation, (MirDirection)i, 1)))
                     {

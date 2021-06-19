@@ -34,43 +34,43 @@ namespace Server.MirObjects.Monsters
                 int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                 if (damage == 0) return;
 
-                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 500, Target, damage, DefenceType.MAC);
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 500, Target, damage, DefenceType.MAC, false);
                 ActionList.Add(action);
             }
             else
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
-                LineAttack();
-            }
-
-        }
-
-        private void AttackDetails()
-        {
-
-        }
-
-        private void LineAttack()
-        {
-            List<MapObject> targets = FindAllTargets(2, CurrentLocation);
-            if (targets.Count == 0) return;
-
-            for (int i = 0; i < targets.Count; i++)
-            {
                 int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                 if (damage == 0) return;
-                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 900, targets[i], damage, DefenceType.MAC);
-                ActionList.Add(action);
 
-                if (Envir.Random.Next(Settings.PoisonResistWeight) >= Target.Stats[Stat.PoisonResist])
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 800, Target, damage, DefenceType.ACAgility, true);
+                ActionList.Add(action);
+            }
+        }
+
+        protected override void CompleteAttack(IList<object> data)
+        {
+            MapObject target = (MapObject)data[0];
+            int damage = (int)data[1];
+            DefenceType defence = (DefenceType)data[2];
+            bool stompAttack = (bool)data[3];
+
+            if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
+
+            if (stompAttack)
+            {
+                var targets = FindAllTargets(2, CurrentLocation);
+
+                for (int i = 0; i < targets.Count; i++)
                 {
-                    if (Envir.Random.Next(5) == 0)
-                    {
-                        targets[i].ApplyPoison(new Poison { Owner = this, Duration = 4, PType = PoisonType.Paralysis, Value = GetAttackPower(Stats[Stat.MinSC], Stats[Stat.MaxSC]), TickSpeed = 1000 }, this);
-                    }
+                    targets[i].Attacked(this, damage, defence);
+                    PoisonTarget(targets[i], 5, 4, PoisonType.Paralysis, 1000);
                 }
             }
-
+            else
+            {
+                target.Attacked(this, damage, defence);
+            }
         }
     }
 }

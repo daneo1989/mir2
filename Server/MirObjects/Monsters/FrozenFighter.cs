@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using Server.MirDatabase;
 using Server.MirEnvir;
@@ -6,7 +7,7 @@ using S = ServerPackets;
 
 namespace Server.MirObjects.Monsters
 {
-    class FrozenFighter : MonsterObject
+    public class FrozenFighter : MonsterObject
     {
         protected internal FrozenFighter(MonsterInfo info)
             : base(info)
@@ -39,60 +40,68 @@ namespace Server.MirObjects.Monsters
             Direction = Functions.DirectionFromPoint(CurrentLocation, Target.CurrentLocation);
             bool ranged = CurrentLocation == Target.CurrentLocation || !Functions.InRange(CurrentLocation, Target.CurrentLocation, 1);
 
+            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
+            if (damage == 0) return;
+
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
 
             if (!ranged && Envir.Random.Next(3) > 0)
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
-                int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-                if (damage == 0) return;
-                Target.Attacked(this, damage, DefenceType.ACAgility);
+
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 600, Target, damage, DefenceType.ACAgility, false);
+                ActionList.Add(action);
             }
             else
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, Type = 1 });
-                LineAttack(3);
 
-                if (Envir.Random.Next(7) == 0)
-                    if (Envir.Random.Next(Settings.PoisonResistWeight) >= Target.Stats[Stat.PoisonResist])
-                    {
-                        int poisonLength = 5;
-
-                        Target.ApplyPoison(new Poison { PType = PoisonType.Stun, Duration = poisonLength, TickSpeed = 1000 }, this);
-                        Broadcast(new S.ObjectEffect { ObjectID = Target.ObjectID, Effect = SpellEffect.Stunned, Time = (uint)poisonLength * 1000 });
-                    }
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 600, Target, damage, DefenceType.ACAgility, true);
+                ActionList.Add(action);
             }
         }
-        private void LineAttack(int distance)
+
+        protected override void CompleteAttack(IList<object> data)
         {
-            int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
-            if (damage == 0) return;
+            MapObject target = (MapObject)data[0];
+            int damage = (int)data[1];
+            DefenceType defence = (DefenceType)data[2];
+            bool lineAttack = (bool)data[3];
 
-            for (int i = 1; i <= distance; i++)
+            if (target == null || !target.IsAttackTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
+
+            if (lineAttack)
             {
-                Point target = Functions.PointMove(CurrentLocation, Direction, i);
-
-                if (target == Target.CurrentLocation)
-                    Target.Attacked(this, damage, DefenceType.ACAgility);
-                else
+                for (int i = 1; i <= 2; i++)
                 {
-                    if (!CurrentMap.ValidPoint(target)) continue;
+                    Point lineTarget = Functions.PointMove(CurrentLocation, Direction, i);
 
-                    Cell cell = CurrentMap.GetCell(target);
-                    if (cell.Objects == null) continue;
-
-                    for (int o = 0; o < cell.Objects.Count; o++)
+                    if (lineTarget == target.CurrentLocation)
                     {
-                        MapObject ob = cell.Objects[o];
-                        if (ob.Race == ObjectType.Monster || ob.Race == ObjectType.Player)
-                        {
-                            if (!ob.IsAttackTarget(this)) continue;
-                            ob.Attacked(this, damage, DefenceType.ACAgility);
-                        }
-                        else continue;
+                        if (target.Attacked(this, damage, DefenceType.ACAgility) <= 0) continue;
+                        PoisonTarget(target, 7, 5, PoisonType.Dazed, 1000);
+                    }
+                    else
+                    {
+                        if (!CurrentMap.ValidPoint(lineTarget)) continue;
 
-                        break;
+                        Cell cell = CurrentMap.GetCell(lineTarget);
+                        if (cell.Objects == null) continue;
+
+                        for (int o = 0; o < cell.Objects.Count; o++)
+                        {
+                            MapObject ob = cell.Objects[o];
+                            if (ob.Race == ObjectType.Monster || ob.Race == ObjectType.Player)
+                            {
+                                if (!ob.IsAttackTarget(this)) continue;
+                                if (ob.Attacked(this, damage, DefenceType.ACAgility) <= 0) continue;
+
+                                PoisonTarget(ob, 7, 5, PoisonType.Dazed, 1000);
+                            }
+                            else continue;
+                            break;
+                        }
                     }
                 }
             }
@@ -105,8 +114,7 @@ namespace Server.MirObjects.Monsters
             if (InAttackRange() && CanAttack)
             {
                 Attack();
-                if (Target.Dead)
-                    FindTarget();
+
                 return;
             }
 

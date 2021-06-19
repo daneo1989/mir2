@@ -17,8 +17,21 @@ namespace Server.MirObjects.Monsters
 
         public override void Die()
         {
-            ActionList.Add(new DelayedAction(DelayedType.Die, Envir.Time + 500));
             base.Die();
+
+            ActionList.Add(new DelayedAction(DelayedType.Die, Envir.Time + 500));
+        }
+
+        public override void ApplyNegativeEffects(PlayerObject attacker, DefenceType type, ushort levelOffset)
+        {
+            base.ApplyNegativeEffects(attacker, type, levelOffset);
+
+            if (Envir.Random.Next(3) == 0)
+            {
+                Broadcast(new S.ObjectEffect { ObjectID = ObjectID, Effect = SpellEffect.DeathCrawlerBreath });
+
+                PoisonTarget(attacker, 5, 5, PoisonType.Green, 2000);
+            }
         }
 
         protected override void CompleteDeath(IList<object> data)
@@ -28,15 +41,8 @@ namespace Server.MirObjects.Monsters
 
             for (int i = 0; i < targets.Count; i++)
             {
-                if (Envir.Random.Next(Settings.PoisonResistWeight) >= targets[i].Stats[Stat.PoisonResist])
-                {
-                    if (Envir.Random.Next(5) == 0)
-                    {
-                        targets[i].ApplyPoison(new Poison { Owner = this, Duration = 5, PType = PoisonType.Green, Value = GetAttackPower(Stats[Stat.MinSC], Stats[Stat.MaxSC]), TickSpeed = 2000 }, this);
-                    }
-                }
+                PoisonTarget(targets[i], 5, 5, PoisonType.Green, 2000);
             }
-
         }
     }
 }

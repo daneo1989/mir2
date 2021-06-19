@@ -1,16 +1,16 @@
-﻿using System;
+﻿using Server.Library.Utils;
+using Server.MirDatabase;
+using Server.MirNetwork;
+using Server.MirObjects;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.IO;
-using Server.Library.Utils;
-using Server.MirDatabase;
-using Server.MirNetwork;
-using Server.MirObjects;
 using S = ServerPackets;
 
 namespace Server.MirEnvir
@@ -441,6 +441,13 @@ namespace Server.MirEnvir
                 if (GetMonsterInfo(Settings.ToadName, true) == null) return "Cannot start server without mob: " + Settings.ToadName;
                 if (GetMonsterInfo(Settings.SnakeTotemName, true) == null) return "Cannot start server without mob: " + Settings.SnakeTotemName;
                 if (GetMonsterInfo(Settings.FishingMonster, true) == null) return "Cannot start server without mob: " + Settings.FishingMonster;
+                if (GetMonsterInfo(Settings.GeneralMeowMeowMob1, true) == null) return "Cannot start server without mob: " + Settings.GeneralMeowMeowMob1;
+                if (GetMonsterInfo(Settings.GeneralMeowMeowMob2, true) == null) return "Cannot start server without mob: " + Settings.GeneralMeowMeowMob2;
+                if (GetMonsterInfo(Settings.GeneralMeowMeowMob3, true) == null) return "Cannot start server without mob: " + Settings.GeneralMeowMeowMob3;
+                if (GetMonsterInfo(Settings.GeneralMeowMeowMob4, true) == null) return "Cannot start server without mob: " + Settings.GeneralMeowMeowMob4;
+                if (GetMonsterInfo(Settings.KingHydraxMob, true) == null) return "Cannot start server without mob: " + Settings.KingHydraxMob;
+                if (GetMonsterInfo(Settings.HornedCommanderMob, true) == null) return "Cannot start server without mob: " + Settings.HornedCommanderMob;
+                if (GetMonsterInfo(Settings.HornedCommanderBombMob, true) == null) return "Cannot start server without mob: " + Settings.HornedCommanderBombMob;
 
                 if (GetItemInfo(Settings.RefineOreName) == null) return "Cannot start server without item: " + Settings.RefineOreName;
             }

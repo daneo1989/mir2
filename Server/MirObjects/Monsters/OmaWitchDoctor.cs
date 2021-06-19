@@ -11,14 +11,6 @@ namespace Server.MirObjects.Monsters
 {
     public class OmaWitchDoctor : MonsterObject
     {
-        protected virtual byte AttackRange
-        {
-            get
-            {
-                return 8;
-            }
-        }
-
         protected internal OmaWitchDoctor(MonsterInfo info)
             : base(info)
         {
@@ -26,12 +18,24 @@ namespace Server.MirObjects.Monsters
 
         protected override bool InAttackRange()
         {
-            return CurrentMap == Target.CurrentMap && Functions.InRange(CurrentLocation, Target.CurrentLocation, AttackRange);
+            return CurrentMap == Target.CurrentMap && Functions.InRange(CurrentLocation, Target.CurrentLocation, Info.ViewRange);
+        }
+
+        protected bool InLineAttackRange()
+        {
+            if (Target.CurrentMap != CurrentMap) return false;
+            if (Target.CurrentLocation == CurrentLocation) return false;
+
+            int x = Math.Abs(Target.CurrentLocation.X - CurrentLocation.X);
+            int y = Math.Abs(Target.CurrentLocation.Y - CurrentLocation.Y);
+
+            if (x > 6 || y > 6) return false;
+
+            return (x == 0) || (y == 0) || (x == y);
         }
 
         protected override void Attack()
         {
-
             if (!Target.IsAttackTarget(this))
             {
                 Target = null;
@@ -46,75 +50,39 @@ namespace Server.MirObjects.Monsters
             ActionTime = Envir.Time + 300;
             AttackTime = Envir.Time + AttackSpeed;
 
-
             if (!ranged)
             {
                 Broadcast(new S.ObjectAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation });
                 int damage = GetAttackPower(Stats[Stat.MinDC], Stats[Stat.MaxDC]);
                 if (damage == 0) return;
-                Target.Attacked(this, damage, DefenceType.MACAgility);
+
+                DelayedAction action = new DelayedAction(DelayedType.Damage, Envir.Time + 500, Target, damage, DefenceType.ACAgility);
+                ActionList.Add(action);
             }
             else
             {
-                if (Envir.Random.Next(3) > 0)
+                if (InLineAttackRange())
                 {
-                    Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID, Type = 0 });
                     AttackTime = Envir.Time + AttackSpeed + 500;
+
+                    Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID, Type = 0 });
+                    
                     int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
                     if (damage == 0) return;
                     
-                    LineAttack(6);
-
-                    DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + 500, Target, damage, DefenceType.MAC);
-                    ActionList.Add(action);
+                    LineAttack(damage, 6, 500, DefenceType.MACAgility);
                 }
                 else
                 {
-                    Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID, Type = 1 });
-                    int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]); 
                     AttackTime = Envir.Time + AttackSpeed + 500;
+
+                    Broadcast(new S.ObjectRangeAttack { ObjectID = ObjectID, Direction = Direction, Location = CurrentLocation, TargetID = Target.ObjectID, Type = 1 });
+
+                    int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);             
                     if (damage == 0) return;
 
                     DelayedAction action = new DelayedAction(DelayedType.RangeDamage, Envir.Time + 500, Target, damage, DefenceType.MAC);
                     ActionList.Add(action);
-                }
-            }
-
-            if (Target.Dead)
-                FindTarget();
-        }
-
-
-        private void LineAttack(int distance)
-        {
-            int damage = GetAttackPower(Stats[Stat.MinMC], Stats[Stat.MaxMC]);
-            if (damage == 0) return;
-
-            for (int i = 1; i <= distance; i++)
-            {
-                Point target = Functions.PointMove(CurrentLocation, Direction, i);
-
-                if (target == Target.CurrentLocation)
-                    Target.Attacked(this, damage, DefenceType.MACAgility);
-                else
-                {
-                    if (!CurrentMap.ValidPoint(target)) continue;
-
-                    Cell cell = CurrentMap.GetCell(target);
-                    if (cell.Objects == null) continue;
-
-                    for (int o = 0; o < cell.Objects.Count; o++)
-                    {
-                        MapObject ob = cell.Objects[o];
-                        if (ob.Race == ObjectType.Monster || ob.Race == ObjectType.Player)
-                        {
-                            if (!ob.IsAttackTarget(this)) continue;
-                            ob.Attacked(this, damage, DefenceType.MACAgility);
-                        }
-                        else continue;
-
-                        break;
-                    }
                 }
             }
         }
@@ -135,7 +103,10 @@ namespace Server.MirObjects.Monsters
                 return;
             }
 
-            MoveTo(Target.CurrentLocation);
+            if (!InLineAttackRange())
+            {
+                MoveTo(Target.CurrentLocation);
+            }
         }
     }
 }

@@ -47,7 +47,6 @@ namespace Server
         public static bool EnforceDBChecks = true;
 
         public static bool MonsterProcessWhenAlone = false;
-        public static bool MonsterProcessWhenStacked = false;
 
         public static string DefaultNPCFilename = "00Default";
         public static string MonsterNPCFilename = "00Monster";
@@ -155,7 +154,14 @@ namespace Server
                              SnakeTotemName = "SnakeTotem",
                              SnakesName = "CharmedSnake",
                              AncientBatName = "AncientBat",
-                             TucsonGeneralEgg = "GeneralTucson";
+                             TucsonGeneralEgg = "GeneralTucson",
+                             GeneralMeowMeowMob1 = "StainHammerCat",
+                             GeneralMeowMeowMob2 = "BlackHammerCat",
+                             GeneralMeowMeowMob3 = "StrayCat",
+                             GeneralMeowMeowMob4 = "CatShaman",
+                             KingHydraxMob = "Hydrax",
+                             HornedCommanderMob = "HornedSorceror",
+                             HornedCommanderBombMob = "BoulderSpirit";
 
         public static string HealRing = "Healing",
                              FireRing = "FireBall",
@@ -297,7 +303,6 @@ namespace Server
             TestServer = Reader.ReadBoolean("General", "TestServer", TestServer);
             EnforceDBChecks = Reader.ReadBoolean("General", "EnforceDBChecks", EnforceDBChecks);
             MonsterProcessWhenAlone = Reader.ReadBoolean("General", "MonsterProcessWhenAlone", MonsterProcessWhenAlone);
-            MonsterProcessWhenStacked = Reader.ReadBoolean("General", "MonsterProcessWhenStacked", MonsterProcessWhenStacked);
 
             //Paths
             IPAddress = Reader.ReadString("Network", "IPAddress", IPAddress);
@@ -370,6 +375,13 @@ namespace Server
             HellBomb1 = Reader.ReadString("Game", "HellBomb1", HellBomb1);
             HellBomb2 = Reader.ReadString("Game", "HellBomb2", HellBomb2);
             HellBomb3 = Reader.ReadString("Game", "HellBomb3", HellBomb3);
+            GeneralMeowMeowMob1 = Reader.ReadString("Game", "GeneralMeowMeowMob1", GeneralMeowMeowMob1);
+            GeneralMeowMeowMob2 = Reader.ReadString("Game", "GeneralMeowMeowMob2", GeneralMeowMeowMob2);
+            GeneralMeowMeowMob3 = Reader.ReadString("Game", "GeneralMeowMeowMob3", GeneralMeowMeowMob3);
+            GeneralMeowMeowMob4 = Reader.ReadString("Game", "GeneralMeowMeowMob4", GeneralMeowMeowMob4);
+            KingHydraxMob = Reader.ReadString("Game", "KingHydraxMob", KingHydraxMob);
+            HornedCommanderMob = Reader.ReadString("Game", "HornedCommanderMob", HornedCommanderMob);
+            HornedCommanderBombMob = Reader.ReadString("Game", "HornedCommanderBombMob", HornedCommanderBombMob);
             WhiteSnake = Reader.ReadString("Game", "WhiteSnake", WhiteSnake);
             AngelName = Reader.ReadString("Game", "AngelName", AngelName);
             BombSpiderName = Reader.ReadString("Game", "BombSpiderName", BombSpiderName);
@@ -536,7 +548,6 @@ namespace Server
             Reader.Write("General", "TestServer", TestServer);
             Reader.Write("General", "EnforceDBChecks", EnforceDBChecks);
             Reader.Write("General", "MonsterProcessWhenAlone", MonsterProcessWhenAlone);
-            Reader.Write("General", "MonsterProcessWhenStacked", MonsterProcessWhenStacked);
 
             //Paths
             Reader.Write("Network", "IPAddress", IPAddress);
@@ -661,6 +672,15 @@ namespace Server
             Reader.Write("Items", "PvpCanFreeze", PvpCanFreeze);
 
             Reader.Write("Bonus", "RangeAccuracyBonus", RangeAccuracyBonus);
+
+            Reader.Write("Game", "GeneralMeowMeowMob1", GeneralMeowMeowMob1);
+            Reader.Write("Game", "GeneralMeowMeowMob2", GeneralMeowMeowMob2);
+            Reader.Write("Game", "GeneralMeowMeowMob3", GeneralMeowMeowMob3);
+            Reader.Write("Game", "GeneralMeowMeowMob4", GeneralMeowMeowMob4);
+
+            Reader.Write("Game", "KingHydraxMob", KingHydraxMob);
+            Reader.Write("Game", "HornedCommanderMob", HornedCommanderMob);
+            Reader.Write("Game", "HornedCommanderBombMob", HornedCommanderBombMob);
 
             //IntelligentCreature
             Reader.Write("IntelligentCreatures", "CreatureBlackStoneName", CreatureBlackStoneName);

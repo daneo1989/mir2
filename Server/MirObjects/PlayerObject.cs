@@ -183,7 +183,7 @@ namespace Server.MirObjects
         {
             get
             {
-                return !Dead && Envir.Time >= ActionTime && Envir.Time >= SpellTime && !CurrentPoison.HasFlag(PoisonType.Stun) &&
+                return !Dead && Envir.Time >= ActionTime && Envir.Time >= SpellTime && !CurrentPoison.HasFlag(PoisonType.Stun) && !CurrentPoison.HasFlag(PoisonType.Dazed) &&
                     !CurrentPoison.HasFlag(PoisonType.Paralysis) && !CurrentPoison.HasFlag(PoisonType.Frozen) && Mount.CanAttack && !Fishing;
             }
         }
@@ -974,7 +974,10 @@ namespace Server.MirObjects
                     case PoisonType.Stun:
                         DamageRate += 0.20F;
                         break;
+                    case PoisonType.Blindness:
+                        break;
                 }
+
                 type |= poison.PType;
                 /*
                 if ((int)type < (int)poison.PType)
@@ -2442,12 +2445,6 @@ namespace Server.MirObjects
                         MapObject ob = cell.Objects[i];
                         if (ob == this) continue;
 
-                        if (ob.Race == ObjectType.Deco)
-                        {
-                            var tt = 0;
-
-                            tt++;
-                        }
                         //if (ob.Race == ObjectType.Player && ob.Observer) continue;
                         if (ob.Race == ObjectType.Player)
                         {
@@ -2457,7 +2454,8 @@ namespace Server.MirObjects
                         else if (ob.Race == ObjectType.Spell)
                         {
                             SpellObject obSpell = (SpellObject)ob;
-                            if ((obSpell.Spell != Spell.ExplosiveTrap) || (IsFriendlyTarget(obSpell.Caster)))
+
+                            if ((obSpell.Spell != Spell.ExplosiveTrap) || (obSpell.Caster != null && IsFriendlyTarget(obSpell.Caster)))
                                 Enqueue(ob.GetInfo());
                         }
                         else if (ob.Race == ObjectType.Merchant)
@@ -7808,9 +7806,6 @@ namespace Server.MirObjects
 
                 CurrentLocation = location;
 
-
-                
-
                 Enqueue(new S.UserDash { Direction = Direction, Location = location });
                 Broadcast(new S.ObjectDash { ObjectID = ObjectID, Direction = Direction, Location = location });
 
@@ -7846,7 +7841,8 @@ namespace Server.MirObjects
                     SpellObject ob = (SpellObject)cell.Objects[i];
 
                     if (ob.Spell != Spell.FireWall || !IsAttackTarget(ob.Caster)) continue;
-                    Attacked(ob.Caster, ob.Value, DefenceType.MAC, false);
+
+                    Attacked((PlayerObject)ob.Caster, ob.Value, DefenceType.MAC, false);
                     break;
                 }
             }
@@ -8933,17 +8929,23 @@ namespace Server.MirObjects
                     if (target == null || !target.IsFriendlyTarget(this) || target.CurrentMap != CurrentMap || target.Node == null) return;
                     if (Envir.Random.Next(4) > magic.Level || target.PoisonList.Count == 0) return;
 
-                    target.ExplosionInflictedTime = 0;
-                    target.ExplosionInflictedStage = 0;
-
                     target.RemoveBuff(BuffType.Curse);
+
+                    if (target.PoisonList.Any(x => x.PType == PoisonType.DelayedExplosion))
+                    {
+                        target.ExplosionInflictedTime = 0;
+                        target.ExplosionInflictedStage = 0;
+
+                        if (target.ObjectID == ObjectID)
+                        {
+                            Enqueue(new S.RemoveDelayedExplosion { ObjectID = target.ObjectID });
+                        }
+
+                        target.Broadcast(new S.RemoveDelayedExplosion { ObjectID = target.ObjectID });
+                    }
 
                     target.PoisonList.Clear();
                     target.OperateTime = 0;
-
-                    if (target.ObjectID == ObjectID)
-                        Enqueue(new S.RemoveDelayedExplosion { ObjectID = target.ObjectID });
-                    target.Broadcast(new S.RemoveDelayedExplosion { ObjectID = target.ObjectID });
 
                     LevelMagic(magic);
                     break;
@@ -13297,7 +13299,7 @@ namespace Server.MirObjects
 
             return true;
         }
-        private bool CanRemoveItem(MirGridType grid, UserItem item)
+        public bool CanRemoveItem(MirGridType grid, UserItem item)
         {
             //Item  Stuck
 

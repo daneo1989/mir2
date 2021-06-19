@@ -1059,6 +1059,17 @@ namespace Server.MirObjects
 
                     acts.Add(new NPCActions(ActionType.ExpireTimer, parts[1]));
                     break;
+
+                case "UNEQUIPITEM":
+                    var type = "";
+
+                    if (parts.Length >= 2)
+                    {
+                        type = parts[1];
+                    }
+
+                    acts.Add(new NPCActions(ActionType.UnequipItem, type));
+                    break;
             }
         }
 
@@ -3761,6 +3772,51 @@ namespace Server.MirObjects
                     case ActionType.ExpireTimer:
                         {
                             player.ExpireTimer(param[0]);
+                        }
+                        break;
+                    case ActionType.UnequipItem:
+                        {
+                            var slot = param[0];
+
+                            for (int e = 0; e < player.Info.Equipment.Length; e++)
+                            {
+                                var item = player.Info.Equipment[e];
+
+                                if (item == null) continue;
+
+                                var slotName = (EquipmentSlot)e;
+
+                                if (!string.IsNullOrEmpty(slot) && slot.ToLower() != slotName.ToString().ToLower()) continue;
+
+                                if (!player.CanRemoveItem(MirGridType.Inventory, item) || item.Cursed || item.WeddingRing != -1) continue;
+
+                                for (int k = 0; k < player.Info.Inventory.Length; k++)
+                                {
+                                    var freeSlot = player.Info.Inventory[k];
+
+                                    if (freeSlot != null) continue;
+
+                                    player.Info.Equipment[e] = null;
+                                    player.Info.Inventory[k] = item;
+
+                                    player.Report.ItemMoved(item, MirGridType.Equipment, MirGridType.Inventory, e, k);
+
+                                    break;
+                                }
+                            }
+
+                            S.UserSlotsRefresh packet = new S.UserSlotsRefresh
+                            {
+                                Inventory = new UserItem[player.Info.Inventory.Length],
+                                Equipment = new UserItem[player.Info.Equipment.Length],
+                            };
+
+                            player.Info.Inventory.CopyTo(packet.Inventory, 0);
+                            player.Info.Equipment.CopyTo(packet.Equipment, 0);
+
+                            player.Enqueue(packet);
+
+                            player.RefreshStats();
                         }
                         break;
                 }

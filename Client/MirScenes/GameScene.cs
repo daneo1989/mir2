@@ -75,7 +75,6 @@ namespace Client.MirScenes
         public CustomPanel1 CustomPanel1;
         public SocketDialog SocketDialog;
 
-        //public SkillBarDialog SkillBarDialog;
         public List<SkillBarDialog> SkillBarDialogs = new List<SkillBarDialog>();
         public ChatOptionDialog ChatOptionDialog;
         public ChatNoticeDialog ChatNoticeDialog;
@@ -666,6 +665,7 @@ namespace Client.MirScenes
                             MiniMapDialog.Show();
                             CharacterDuraPanel.Show();
                             DuraStatusPanel.Show();
+                            BuffsDialog.Show();
                         }
                         else
                         {
@@ -676,6 +676,7 @@ namespace Client.MirScenes
                             MiniMapDialog.Hide();
                             CharacterDuraPanel.Hide();
                             DuraStatusPanel.Hide();
+                            BuffsDialog.Hide();
                         }
                         break;
                     case KeybindOptions.DropView:
@@ -1068,6 +1069,8 @@ namespace Client.MirScenes
             ProcessOuput();
 
             UpdateMouseCursor();
+
+            SoundManager.ProcessDelayedSounds();
         }
 
         public void DialogProcess()
@@ -1108,6 +1111,9 @@ namespace Client.MirScenes
                     break;
                 case (short)ServerPacketIds.UserInformation:
                     UserInformation((S.UserInformation)p);
+                    break;
+                case (short)ServerPacketIds.UserSlotsRefresh:
+                    UserSlotsRefresh((S.UserSlotsRefresh)p);
                     break;
                 case (short)ServerPacketIds.UserLocation:
                     UserLocation((S.UserLocation)p);
@@ -1802,6 +1808,11 @@ namespace Client.MirScenes
             foreach (SkillBarDialog Bar in SkillBarDialogs)
                 Bar.Update();
         }
+        private void UserSlotsRefresh(S.UserSlotsRefresh p)
+        {
+            User.SetSlots(p);
+        }
+
         private void UserLocation(S.UserLocation p)
         {
             MapControl.NextAction = 0;
@@ -2809,6 +2820,11 @@ namespace Client.MirScenes
                                 action = new QueuedAction { Action = MirAction.Attack4, Direction = p.Direction, Location = p.Location, Params = new List<object>() };
                                 break;
                             }
+                        case 4:
+                            {
+                                action = new QueuedAction { Action = MirAction.Attack5, Direction = p.Direction, Location = p.Location, Params = new List<object>() };
+                                break;
+                            }
                     }
                 }
                 action.Params.Add(p.Spell);
@@ -3275,10 +3291,17 @@ namespace Client.MirScenes
         }
         private void Poisoned(S.Poisoned p)
         {
+            var previousPoisons = User.Poison;
+
             User.Poison = p.Poison;
-            if (p.Poison.HasFlag(PoisonType.Stun) || p.Poison.HasFlag(PoisonType.Frozen) || p.Poison.HasFlag(PoisonType.Paralysis) || p.Poison.HasFlag(PoisonType.LRParalysis))
+            if (p.Poison.HasFlag(PoisonType.Stun) || p.Poison.HasFlag(PoisonType.Dazed) || p.Poison.HasFlag(PoisonType.Frozen) || p.Poison.HasFlag(PoisonType.Paralysis) || p.Poison.HasFlag(PoisonType.LRParalysis))
             {
-                    User.ClearMagic();
+                User.ClearMagic();
+            }
+
+            if (previousPoisons.HasFlag(PoisonType.Blindness) && !User.Poison.HasFlag(PoisonType.Blindness))
+            {
+                User.BlindCount = 0;
             }
         }
         private void ObjectPoisoned(S.ObjectPoisoned p)
@@ -3333,17 +3356,17 @@ namespace Client.MirScenes
                 {
                     case 1: //Yimoogi
                         {
-                            effect = new Effect(Libraries.Magic2, 1300, 10, 500, ob);
+                            effect = new Effect(Libraries.Magic2, 1300, 10, 500, ob.CurrentLocation);
                             break;
                         }
                     case 2: //RedFoxman
                         {
-                            effect = new Effect(Libraries.Monsters[(ushort)Monster.RedFoxman], 243, 10, 500, ob);
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.RedFoxman], 243, 10, 500, ob.CurrentLocation);
                             break;
                         }
                     case 4: //MutatedManWorm
                         {
-                            effect = new Effect(Libraries.Monsters[(ushort)Monster.MutatedManworm], 272, 6, 500, ob);
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.MutatedManworm], 272, 6, 500, ob.CurrentLocation);
 
                             SoundManager.PlaySound(((ushort)Monster.MutatedManworm) * 10 + 7);
                             playDefaultSound = false;
@@ -3351,29 +3374,64 @@ namespace Client.MirScenes
                         }
                     case 5: //WitchDoctor
                         {
-                            effect = new Effect(Libraries.Monsters[(ushort)Monster.WitchDoctor], 328, 20, 1000, ob);
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.WitchDoctor], 328, 20, 1000, ob.CurrentLocation);
+                            SoundManager.PlaySound(((ushort)Monster.WitchDoctor) * 10 + 7);
+                            playDefaultSound = false;
                             break;
                         }
                     case 6: //TurtleKing
                         {
-                            effect = new Effect(Libraries.Monsters[(ushort)Monster.TurtleKing], 946, 10, 500, ob);
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.TurtleKing], 946, 10, 500, ob.CurrentLocation);
+                            break;
+                        }
+                    case 7: //Mandrill
+                        {
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.Mandrill], 280, 10, 1000, ob.CurrentLocation);
+                            break;
+                        }
+                    case 8: //DarkCaptain
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.DarkCaptain], 1224, 10, 1000, ob.CurrentLocation));
+                            SoundManager.PlaySound(((ushort)Monster.DarkCaptain) * 10 + 8);
+                            playDefaultSound = false;
+                            break;
+                        }
+                    case 9: //Doe
+                        {
+                            effect = new Effect(Libraries.Monsters[(ushort)Monster.Doe], 208, 10, 1000, ob.CurrentLocation);
+                            SoundManager.PlaySound(((ushort)Monster.Doe) * 10 + 7);
+                            playDefaultSound = false;
+                            break;
+                        }
+                    case 10: //HornedCommander
+                        {
+                            MapControl.Effects.Add(effect = new Effect(Libraries.Monsters[(ushort)Monster.HornedCommander], 928, 10, 1000, ob.CurrentLocation));
+                            SoundManager.PlaySound(8455);
+                            playDefaultSound = false;
                             break;
                         }
                     default:
                         {
-                            effect = new Effect(Libraries.Magic, 250, 10, 500, ob);
+                            effect = new Effect(Libraries.Magic, 250, 10, 500, ob.CurrentLocation);
                             break;
                         }
                 }
 
-                if (effect != null)
-                {
-                    effect.Complete += (o, e) => ob.Remove();
-                    ob.Effects.Add(effect);
-                }
+                //Doesn't seem to have ever worked properly - Meant to remove object after animation complete, however due to server mechanics will always
+                //instantly remove object and never play TeleportOut animation. Changing to a MapEffect - not ideal as theres no delay.
 
-                if(playDefaultSound)
+                MapControl.Effects.Add(effect);
+
+                //if (effect != null)
+                //{
+                //    effect.Complete += (o, e) => ob.Remove();
+                //    ob.Effects.Add(effect);
+                //}
+
+                if (playDefaultSound)
+                {
                     SoundManager.PlaySound(SoundList.Teleport);
+                }
 
                 return;
             }
@@ -3410,11 +3468,39 @@ namespace Client.MirScenes
                     case 5: //WitchDoctor
                         {
                             ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.WitchDoctor], 348, 20, 1000, ob));
+                            SoundManager.PlaySound(((ushort)Monster.WitchDoctor) * 10 + 7);
+                            playDefaultSound = false;
                             break;
                         }
                     case 6: //TurtleKing
                         {
                             ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.TurtleKing], 956, 10, 500, ob));
+                            break;
+                        }
+                    case 7: //Mandrill
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.Mandrill], 290, 10, 1000, ob));
+                            break;
+                        }
+                    case 8: //DarkCaptain
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.DarkCaptain], 1224, 10, 1000, ob));
+                            SoundManager.PlaySound(((ushort)Monster.DarkCaptain) * 10 + 9);
+                            playDefaultSound = false;
+                            break;
+                        }
+                    case 9: //Doe
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.Doe], 208, 10, 1000, ob));
+                            SoundManager.PlaySound(((ushort)Monster.Doe) * 10 + 7);
+                            playDefaultSound = false;
+                            break;
+                        }
+                    case 10: //HornedCommander
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.HornedCommander], 928, 10, 1000, ob));
+                            SoundManager.PlaySound(8455);
+                            playDefaultSound = false;
                             break;
                         }
                     default:
@@ -3424,14 +3510,15 @@ namespace Client.MirScenes
                         }
                 }
 
-                if(playDefaultSound)
+                if (playDefaultSound)
+                {
                     SoundManager.PlaySound(SoundList.Teleport);
+                }
 
                 return;
             }
-
-            
         }
+
         private void TeleportIn()
         {
             User.Effects.Add(new Effect(Libraries.Magic, 260, 10, 500, User));
@@ -3812,6 +3899,7 @@ namespace Client.MirScenes
                 MapObject ob = MapControl.Objects[i];
                 if (ob.ObjectID != p.ObjectID) continue;
                 PlayerObject player;
+                MonsterObject monster;
 
                 switch (p.Effect)
                 {
@@ -3867,7 +3955,6 @@ namespace Client.MirScenes
                             player.ShieldEffect.Clear();
                             player.ShieldEffect.Remove();
                         }
-
                         player.MagicShield = true;
                         player.Effects.Add(player.ShieldEffect = new Effect(Libraries.Magic, 3890, 3, 600, ob) { Repeat = true });
                         break;
@@ -3935,9 +4022,6 @@ namespace Client.MirScenes
                                 ob.Effects.Add(new DelayedExplosionEffect(Libraries.Magic3, 1590 + ((int)p.EffectType * 10), 8, 1200, ob, true, (int)p.EffectType, 0));
                             }
                         }
-
-                        //else
-                        //    ob.Effects.Add(new DelayedExplosionEffect(Libraries.Magic3, 1590 + ((int)p.EffectType * 10), 8, 1200, ob, true, (int)p.EffectType, 0));
                         break;
                     case SpellEffect.AwakeningSuccess:
                         {
@@ -3997,12 +4081,24 @@ namespace Client.MirScenes
                         ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.IcePillar], 18, 8, 800, ob));
                         break;
                     case SpellEffect.KingGuard:
-                        ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.KingGuard], 753, 10, 1000, ob) { Blend = false });
+                        if (p.EffectType == 0)
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.KingGuard], 753, 10, 1000, ob) { Blend = false });
+                        }
+                        else
+                        {
+                            ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.KingGuard], 763, 10, 1000, ob) { Blend = false });
+                        }
                         break;
-                    case SpellEffect.MonsterMACBuff: //loop - look @ MagicShield for start / loop / end
-                        ob.Effects.Add(new BuffEffect(Libraries.Monsters[(ushort)Monster.HornedArcher], 477, 10, 1000, ob, true, BuffType.MonsterMACBuff) { Repeat = true });
+                    case SpellEffect.FlamingMutantWeb:
+                        ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.FlamingMutant], 330, 10, 1000, ob) {
+                            Repeat = p.Time > 0,
+                            RepeatUntil = p.Time > 0 ? CMain.Time + p.Time : 0
+                        });
                         break;
-
+                    case SpellEffect.DeathCrawlerBreath:
+                        ob.Effects.Add(new Effect(Libraries.Monsters[(ushort)Monster.DeathCrawler], 272 + ((int)ob.Direction * 4), 4, 400, ob) { Blend = true });
+                        break;
                 }
 
                 return;
@@ -4505,7 +4601,7 @@ namespace Client.MirScenes
                 MapObject ob = MapControl.Objects[i];
                 if (ob.ObjectID != p.ObjectID) continue;
 
-                ((PlayerObject)ob).JumpDistance = p.Distance;
+                ob.JumpDistance = p.Distance;
 
                 ob.ActionFeed.Add(new QueuedAction { Action = MirAction.DashAttack, Direction = p.Direction, Location = p.Location });
 
@@ -9020,8 +9116,11 @@ namespace Client.MirScenes
             //Render Death, 
 
             LightSetting setting = Lights == LightSetting.Normal ? GameScene.Scene.Lights : Lights;
-            if (setting != LightSetting.Day)
+
+            if (setting != LightSetting.Day || GameScene.User.Poison.HasFlag(PoisonType.Blindness))
+            {
                 DrawLights(setting);
+            }
 
             if (Settings.DropView || GameScene.DropViewTime > CMain.Time)
             {
@@ -9208,6 +9307,15 @@ namespace Client.MirScenes
 
         private void DrawObjects()
         {
+            if (Settings.Effect)
+            {
+                for (int i = Effects.Count - 1; i >= 0; i--)
+                {
+                    if (!Effects[i].DrawBehind) continue;
+                    Effects[i].Draw();
+                }
+            }
+
             for (int y = User.Movement.Y - ViewRangeY; y <= User.Movement.Y + ViewRangeY + 25; y++)
             {
                 if (y <= 0) continue;
@@ -9378,11 +9486,14 @@ namespace Client.MirScenes
 
             DXManager.SetOpacity(oldOpacity);
 
-            if (MapObject.MouseObject != null && !MapObject.MouseObject.Dead && MapObject.MouseObject != MapObject.TargetObject && MapObject.MouseObject.Blend) //Far
-                MapObject.MouseObject.DrawBlend();
+            if (Settings.HighlightTarget)
+            {
+                if (MapObject.MouseObject != null && !MapObject.MouseObject.Dead && MapObject.MouseObject != MapObject.TargetObject && MapObject.MouseObject.Blend)
+                    MapObject.MouseObject.DrawBlend();
 
-            if (MapObject.TargetObject != null)
-                MapObject.TargetObject.DrawBlend();
+                if (MapObject.TargetObject != null)
+                    MapObject.TargetObject.DrawBlend();
+            }
 
             for (int i = 0; i < Objects.Count; i++)
             {
@@ -9397,12 +9508,29 @@ namespace Client.MirScenes
 
                 Objects[i].DrawDamages();
             }
-            
 
-            if (!Settings.Effect) return;
+            if (Settings.Effect)
+            {
+                for (int i = Effects.Count - 1; i >= 0; i--)
+                {
+                    if (Effects[i].DrawBehind) continue;
+                    Effects[i].Draw();
+                }
+            }
+        }
 
-            for (int i = Effects.Count - 1; i >= 0; i--)
-                Effects[i].Draw();
+        private Color GetBlindLight(Color light)
+        {
+            if (MapObject.User.BlindTime <= CMain.Time && MapObject.User.BlindCount < 25)
+            {
+                MapObject.User.BlindTime = CMain.Time + 100;
+                MapObject.User.BlindCount++;
+            }
+
+            int count = MapObject.User.BlindCount;
+            light = Color.FromArgb(255, Math.Max(20, light.R - (count * 10)), Math.Max(20, light.G - (count * 10)), Math.Max(20, light.B - (count * 10)));
+
+            return light;
         }
 
         private void DrawLights(LightSetting setting)
@@ -9419,27 +9547,50 @@ namespace Client.MirScenes
             DXManager.SetSurface(DXManager.LightSurface);
 
             #region Night Lights
-            Color Darkness = Color.Black;
-            switch (MapDarkLight)
+            Color darkness;
+
+            switch (setting)
             {
-                case 1:
-                    Darkness = Color.FromArgb(255, 20, 20, 20);
+                case LightSetting.Night:
+                    {
+                        switch (MapDarkLight)
+                        {
+                            case 1:
+                                darkness = Color.FromArgb(255, 20, 20, 20);
+                                break;
+                            case 2:
+                                darkness = Color.LightSlateGray;
+                                break;
+                            case 3:
+                                darkness = Color.SkyBlue;
+                                break;
+                            case 4:
+                                darkness = Color.Goldenrod;
+                                break;
+                            default:
+                                darkness = Color.Black;
+                                break;
+                        }
+                    }
                     break;
-                case 2:
-                    Darkness = Color.LightSlateGray;
-                    break;
-                case 3:
-                    Darkness = Color.SkyBlue;
-                    break;
-                case 4:
-                    Darkness = Color.Goldenrod;
+                case LightSetting.Evening:
+                case LightSetting.Dawn:
+                    darkness = Color.FromArgb(255, 50, 50, 50);
                     break;
                 default:
-                    Darkness = Color.Black;
+                case LightSetting.Day:
+                    darkness = Color.FromArgb(255, 255, 255, 255);
                     break;
             }
 
-            DXManager.Device.Clear(ClearFlags.Target, setting == LightSetting.Night ? Darkness : Color.FromArgb(255, 50, 50, 50), 0, 0);
+            if (MapObject.User.Poison.HasFlag(PoisonType.Blindness))
+            {
+                darkness = GetBlindLight(darkness);
+            }
+
+            CMain.DebugText = $"{darkness.A},{darkness.R},{darkness.G},{darkness.B}";
+
+            DXManager.Device.Clear(ClearFlags.Target, darkness, 0, 0);
 
             #endregion
 
@@ -9454,11 +9605,11 @@ namespace Client.MirScenes
                 MapObject ob = Objects[i];
                 if (ob.Light > 0 && (!ob.Dead || ob == MapObject.User || ob.Race == ObjectType.Spell))
                 {
-
                     light = ob.Light;
-                    int LightRange = light % 15;
-                    if (LightRange >= DXManager.Lights.Count)
-                        LightRange = DXManager.Lights.Count - 1;
+
+                    int lightRange = light % 15;
+                    if (lightRange >= DXManager.Lights.Count)
+                        lightRange = DXManager.Lights.Count - 1;
 
                     p = ob.DrawLocation;
 
@@ -9490,13 +9641,18 @@ namespace Client.MirScenes
                         lightColour = Color.FromArgb(255, 120, 120, 120);
                     }
 
-                    if (DXManager.Lights[LightRange] != null && !DXManager.Lights[LightRange].Disposed)
+                    if (MapObject.User.Poison.HasFlag(PoisonType.Blindness))
                     {
-                        p.Offset(-(DXManager.LightSizes[LightRange].X / 2) - (CellWidth / 2), -(DXManager.LightSizes[LightRange].Y / 2) - (CellHeight / 2) -5);
-                        DXManager.Sprite.Draw(DXManager.Lights[LightRange], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), lightColour);
+                        lightColour = GetBlindLight(lightColour);
                     }
 
+                    if (DXManager.Lights[lightRange] != null && !DXManager.Lights[lightRange].Disposed)
+                    {
+                        p.Offset(-(DXManager.LightSizes[lightRange].X / 2) - (CellWidth / 2), -(DXManager.LightSizes[lightRange].Y / 2) - (CellHeight / 2) -5);
+                        DXManager.Sprite.Draw(DXManager.Lights[lightRange], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), lightColour);
+                    }
                 }
+
                 #region Object Effect Lights
                 if (!Settings.Effect) continue;
                 for (int e = 0; e < ob.Effects.Count; e++)
@@ -9505,13 +9661,20 @@ namespace Client.MirScenes
                     if (!effect.Blend || CMain.Time < effect.Start || (!(effect is Missile) && effect.Light < ob.Light)) continue;
 
                     light = effect.Light;
-
+                    
                     p = effect.DrawLocation;
+
+                    var lightColour = effect.LightColour;
+
+                    if (MapObject.User.Poison.HasFlag(PoisonType.Blindness))
+                    {
+                        lightColour = GetBlindLight(lightColour);
+                    }
 
                     if (DXManager.Lights[light] != null && !DXManager.Lights[light].Disposed)
                     {
                         p.Offset(-(DXManager.LightSizes[light].X / 2) - (CellWidth / 2), -(DXManager.LightSizes[light].Y / 2) - (CellHeight / 2) - 5);
-                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), effect.LightColour);
+                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), lightColour);
                     }
 
                 }
@@ -9532,10 +9695,17 @@ namespace Client.MirScenes
 
                     p = effect.DrawLocation;
 
+                    var lightColour = Color.White;
+
+                    if (MapObject.User.Poison.HasFlag(PoisonType.Blindness))
+                    {
+                        lightColour = GetBlindLight(lightColour);
+                    }
+
                     if (DXManager.Lights[light] != null && !DXManager.Lights[light].Disposed)
                     {
                         p.Offset(-(DXManager.LightSizes[light].X / 2) - (CellWidth / 2), -(DXManager.LightSizes[light].Y / 2) - (CellHeight / 2) - 5);
-                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), Color.White);
+                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), lightColour);
                     }
                 }
             }
@@ -9577,6 +9747,11 @@ namespace Client.MirScenes
                             break;
                     }
 
+                    if (MapObject.User.Poison.HasFlag(PoisonType.Blindness))
+                    {
+                        lightIntensity = GetBlindLight(lightIntensity);
+                    }
+
                     int fileIndex = M2CellInfo[x, y].FrontIndex;
 
                     p = new Point(
@@ -9593,7 +9768,7 @@ namespace Client.MirScenes
                     if (DXManager.Lights[light] != null && !DXManager.Lights[light].Disposed)
                     {
                         p.Offset(-(DXManager.LightSizes[light].X / 2) - (CellWidth / 2) + 10, -(DXManager.LightSizes[light].Y / 2) - (CellHeight / 2) - 5);
-                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), Color.White);
+                        DXManager.Sprite.Draw(DXManager.Lights[light], null, Vector3.Zero, new Vector3((float)p.X, (float)p.Y, 0.0F), lightIntensity);
                     }
                 }
             }
@@ -9767,7 +9942,6 @@ namespace Client.MirScenes
                 if (((MapObject.TargetObject.Name.EndsWith(")") || MapObject.TargetObject is PlayerObject) && CMain.Shift) ||
                     (!MapObject.TargetObject.Name.EndsWith(")") && MapObject.TargetObject is MonsterObject))
                 {
-
                     GameScene.LogTime = CMain.Time + Globals.LogDelay;
 
                     if (User.Class == MirClass.Archer && User.HasClassWeapon && !User.RidingMount && !User.Fishing)//ArcherTest - non aggressive targets (player / pets)
@@ -9796,7 +9970,7 @@ namespace Client.MirScenes
 
                     else if (Functions.InRange(MapObject.TargetObject.CurrentLocation, User.CurrentLocation, 1))
                     {
-                        if (CMain.Time > GameScene.AttackTime && CanRideAttack())
+                        if (CMain.Time > GameScene.AttackTime && CanRideAttack() && !User.Poison.HasFlag(PoisonType.Dazed))
                         {
                             User.QueuedAction = new QueuedAction { Action = MirAction.Attack1, Direction = Functions.DirectionFromPoint(User.CurrentLocation, MapObject.TargetObject.CurrentLocation), Location = User.CurrentLocation };
                             return;
@@ -9853,12 +10027,13 @@ namespace Client.MirScenes
                     case MouseButtons.Left:
                         if (MapObject.MouseObject is NPCObject || (MapObject.MouseObject is PlayerObject && MapObject.MouseObject != User)) break;
                         if (MapObject.MouseObject is MonsterObject && MapObject.MouseObject.AI == 70) break;
-
+ 
                         if (CMain.Alt && !User.RidingMount)
                         {
                             User.QueuedAction = new QueuedAction { Action = MirAction.Harvest, Direction = direction, Location = User.CurrentLocation };
                             return;
                         }
+
                         if (CMain.Shift)
                         {
                             if (CMain.Time > GameScene.AttackTime && CanRideAttack()) //ArcherTest - shift click
@@ -9866,7 +10041,7 @@ namespace Client.MirScenes
                                 MapObject target = null;
                                 if (MapObject.MouseObject is MonsterObject || MapObject.MouseObject is PlayerObject) target = MapObject.MouseObject;
 
-                                if (User.Class == MirClass.Archer && User.HasClassWeapon && !User.RidingMount)
+                                if (User.Class == MirClass.Archer && User.HasClassWeapon && !User.RidingMount && !User.Poison.HasFlag(PoisonType.Dazed))
                                 {
                                     if (target != null)
                                     {
@@ -9889,6 +10064,7 @@ namespace Client.MirScenes
                                 
                                 //stops double slash from being used without empty hand or assassin weapon (otherwise bugs on second swing)
                                 if (GameScene.DoubleSlash && (!User.HasClassWeapon && User.Weapon > -1)) return;
+                                if (User.Poison.HasFlag(PoisonType.Dazed)) return;
 
                                 User.QueuedAction = new QueuedAction { Action = MirAction.Attack1, Direction = direction, Location = User.CurrentLocation };
                             }
